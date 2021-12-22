@@ -21,7 +21,7 @@ def f_n (omega):
     res = omega * omega / (exp(hbar * omega / kB / T) - 1.0)
     return res
 
-x = np.logspace (-3, 1.8, 100)
+x = np.logspace (-5, 1.6, 100)
 
 fv = []
 cf = []
@@ -32,7 +32,15 @@ for i in range (0, len(x)):
 
 cf = np.cumsum (fv) / np.sum(fv)
 
-print (cf)
+print ('========================')
+for i in range (0, len(cf)):
+    print (cf[i], ', ', end='')
+print ('')
+print ('========================')
+for i in range (0, len(x)):
+    print (x[i], ', ', end='')
+print ('')
+print ('========================')
 
 f = interp1d(cf, x)
 

@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include "monte_carlo.h"
+#include "planck.h"
 
 using namespace std;
 
@@ -24,6 +25,7 @@ class photon {
 		int    get_polarisation_state () {return s;};
 		double get_beaming_parameter  () {return b;};
 		double get_mu                 () {return mu;};
+		double get_omega              () {return omega;};
 };
 
 photon::photon (double theta, double phi, double T, double beaming) {
@@ -37,16 +39,19 @@ photon::photon (double theta, double phi, double T, double beaming) {
 
 	azimuth = 2.0 * M_PI * uniform (0.0, 1.0);
 
+	omega = sed_planck (T);
+
 
 }
 
 
 int main () {
 
-	photon pht (0.0, 0.0, 100, 1.0);
+	photon pht (0.0, 0.0, 1.0e6, 1.0);
 	cout << "Polarisation state: " << pht.get_polarisation_state() << endl;
 	cout << "Beaming parameter: "<<   pht.get_beaming_parameter () << endl;
 	cout << "mu: " <<                 pht.get_mu () << endl; 
+	cout << "omega: " <<              pht.get_omega () << endl;
 
 
 
