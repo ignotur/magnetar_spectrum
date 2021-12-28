@@ -10,7 +10,7 @@ mpl.rcParams.update({'legend.labelspacing':0.25, 'legend.fontsize': 12})
 mpl.rcParams.update({'errorbar.capsize': 4})
 
 ## Code to solve the non-linear differential equation (6) from Thompson, Lyutikov & Kulkarni (2002)
-## The equation is F'' (mu) + p (p + 1) F + C F ^ (1 + 2/p)
+## The equation is F'' (mu) + p (p + 1) F + C F ^ (1 + 2/p) = 0
 ## It is solved using the collocation method with cos (nx) basis.
 ## Boundary conditions are as the following: F'(0) = 0; F (1) = 0 and F'(1) = -2
 ## C is the parameter which is found together with the solution
