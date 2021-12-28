@@ -12,6 +12,24 @@ using namespace std;
 // The code is based on article by Nobili, Turolla & Zane (2008)
 // Written by Dr. Andrei P. Igoshev ignotur@gmail.com
 
+class magnetic_field {
+	private:
+		double p;      // Parameter describing the magnetic field twist
+		double C;      // Eigenvalue
+		int N = 20;    // Angular resolution for the differential equation
+		double mu [N]; // Mesh for cos \theta  
+		double F [N];  //
+		double Bpole;  // Strength of the magnetic field at the equator
+		double beta;   // Average charge velocity in units of c
+	public:
+		magnetic_field (double p, int N, double beta);
+		double Br      (r, theta);
+		double Btheta  (r, theta);
+		double Bphi    (r, theta);
+		double ne      (r, theta);
+};
+
+
 class photon {
 	private:
 		double b;       // Beaming parameter
