@@ -31,7 +31,8 @@ class magnetic_field {
 		double Br      (double r, double theta) {return -0.5*Bpole * pow( Rns/r , 2.0+p) * dFfun (theta);};
 		double Btheta  (double r, double theta) {return  0.5*Bpole * pow(Rns/r  , 2.0+p) * p * Ffun (theta) / sin(theta);};
 		double Bphi    (double r, double theta) {return Btheta (r, theta) * sqrt(C / (p*(p+1))) * pow(Ffun(theta), 1.0/p);};
-		double ne      (double r, double theta) {return (p+1) / (4.0 * M_PI * echarge);};
+		double B       (double r, double theta) {return sqrt(pow(Br(r, theta), 2.0) + pow(Btheta (r,theta), 2.0) + pow(Bphi(r,theta), 2.0));};
+		double ne      (double r, double theta) {return (p+1) / (4.0 * M_PI * echarge) * (Bphi(r,theta) / Btheta (r,theta)) * B (r, theta) / r / beta ;};
 };
 
 
