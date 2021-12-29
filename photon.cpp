@@ -24,6 +24,9 @@ class magnetosphere {
 		double beta;    // Average charge velocity in units of c
 		double Rns;     // NS radius cm
 		double echarge; // Elementary charge
+		double me;      // Electron rest mass
+		double speed_of_light; // Speed of light
+		double re;      // Classical electron radius
 	public:
 		magnetosphere (double Bpole_par, double beta_par, double Rns); // Initialise the twisted magnetosphere configuration by reading file with solved equation
 		double Ffun    (double theta);
@@ -33,6 +36,7 @@ class magnetosphere {
 		double Bphi    (double r, double theta) {return Btheta (r, theta) * sqrt(C / (p*(p+1))) * pow(Ffun(theta), 1.0/p);};
 		double B       (double r, double theta) {return sqrt(pow(Br(r, theta), 2.0) + pow(Btheta (r,theta), 2.0) + pow(Bphi(r,theta), 2.0));};
 		double ne      (double r, double theta) {return (p+1) / (4.0 * M_PI * echarge) * (Bphi(r,theta) / Btheta (r,theta)) * B (r, theta) / r / beta ;};
+		double omega_B (double r, double theta) {return echarge * B(r,theta) / (me * speed_of_light);};
 };
 
 
@@ -74,6 +78,9 @@ magnetosphere::magnetosphere (double Bpole_par, double beta_par, double Rns_par)
 	beta    = beta_par; 
 	Rns     = Rns_par;
 	echarge = 4.8032e-10;
+	me      = 9.1094e-28; // g
+	speed_of_light = 2.99792458e10; // cm/s
+	re      = 2.8179403227e-13; // cm
 
 	ifstream infile ("F_magnetosphere.txt");
 
