@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -14,19 +15,23 @@ using namespace std;
 
 class magnetic_field {
 	private:
-		double p;      // Parameter describing the magnetic field twist
-		double C;      // Eigenvalue
-		int N = 20;    // Angular resolution for the differential equation
-		double mu [N]; // Mesh for cos \theta  
-		double F [N];  //
-		double Bpole;  // Strength of the magnetic field at the equator
-		double beta;   // Average charge velocity in units of c
+		double p;       // Parameter describing the magnetic field twist
+		double C;       // Eigenvalue
+		int N;          // Angular resolution for the differential equation
+		double * mu;    // Pointer for mesh for cos \theta  
+		double * F;     //
+		double Bpole;   // Strength of the magnetic field at the equator
+		double beta;    // Average charge velocity in units of c
+		double Rns;     // NS radius cm
+		double echarge; // Elementary charge
 	public:
-		magnetic_field (double p, int N, double beta);
-		double Br      (r, theta);
-		double Btheta  (r, theta);
-		double Bphi    (r, theta);
-		double ne      (r, theta);
+		magnetic_field (double Bpole_par, double beta_par, double Rns); // Initialise the twisted magnetosphere configuration by reading file with solved equation
+		double Ffun    (double theta);
+		double dFfun   (double theta);
+		double Br      (double r, double theta) {return -0.5*Bpole * pow( Rns/r , 2.0+p) * dFfun (theta);};
+		double Btheta  (double r, double theta) {return  0.5*Bpole * pow(Rns/r  , 2.0+p) * p * Ffun (theta) / sin(theta);};
+		double Bphi    (double r, double theta) {return Btheta (r, theta) * sqrt(C / (p*(p+1))) * pow(Ffun(theta), 1.0/p);};
+		double ne      (double r, double theta) {return (p+1) / (4.0 * M_PI * echarge);};
 };
 
 
@@ -62,6 +67,57 @@ photon::photon (double theta, double phi, double T, double beaming) {
 
 }
 
+magnetic_field::magnetic_field (double Bpole_par, double beta_par, double Rns_par) {
+
+	Bpole   = Bpole_par;
+	beta    = beta_par; 
+	Rns     = Rns_par;
+	echarge = 4.8032e-10;
+
+	ifstream infile ("F_magnetosphere.txt");
+
+	infile >> N;
+	infile >> p; 
+	infile >> C;
+
+	mu = new double [N];
+	F  = new double [N];
+
+	for (int i =0; i < N; i++) {
+
+		infile >> mu[i] >> F[i];
+
+	}
+
+	cout << "We initiliased twisted magnetosphere using file F_magnetosphere.txt" << endl;
+	cout << "N = " << N << " \t p = " << p << " \t C = "<< C << endl;
+
+};
+
+double magnetic_field::Ffun (double theta) {
+
+	double res = 0.0;
+	double mu_val = cos(theta);
+
+	for (int i=0; i < N; i++) {
+		res += F[i] * cos(i*mu_val);
+	}
+
+	return res;
+}
+
+double magnetic_field::dFfun (double theta) {
+
+	double res = 0.0;
+	double mu_val = cos(theta);
+
+	for (int i=0; i < N; i++) {
+		res += - i * F[i] * sin(i*mu_val);
+	}
+
+	return res;
+}
+
 
 int main () {
 
@@ -70,6 +126,8 @@ int main () {
 	cout << "Beaming parameter: "<<   pht.get_beaming_parameter () << endl;
 	cout << "mu: " <<                 pht.get_mu () << endl; 
 	cout << "omega: " <<              pht.get_omega () << endl;
+
+	magnetic_field (1e14, 0.1, 1e6);
 
 
 
