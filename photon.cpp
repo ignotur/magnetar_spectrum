@@ -13,7 +13,7 @@ using namespace std;
 // The code is based on article by Nobili, Turolla & Zane (2008)
 // Written by Dr. Andrei P. Igoshev ignotur@gmail.com
 
-class magnetic_field {
+class magnetosphere {
 	private:
 		double p;       // Parameter describing the magnetic field twist
 		double C;       // Eigenvalue
@@ -25,7 +25,7 @@ class magnetic_field {
 		double Rns;     // NS radius cm
 		double echarge; // Elementary charge
 	public:
-		magnetic_field (double Bpole_par, double beta_par, double Rns); // Initialise the twisted magnetosphere configuration by reading file with solved equation
+		magnetosphere (double Bpole_par, double beta_par, double Rns); // Initialise the twisted magnetosphere configuration by reading file with solved equation
 		double Ffun    (double theta);
 		double dFfun   (double theta);
 		double Br      (double r, double theta) {return -0.5*Bpole * pow( Rns/r , 2.0+p) * dFfun (theta);};
@@ -68,7 +68,7 @@ photon::photon (double theta, double phi, double T, double beaming) {
 
 }
 
-magnetic_field::magnetic_field (double Bpole_par, double beta_par, double Rns_par) {
+magnetosphere::magnetosphere (double Bpole_par, double beta_par, double Rns_par) {
 
 	Bpole   = Bpole_par;
 	beta    = beta_par; 
@@ -95,7 +95,7 @@ magnetic_field::magnetic_field (double Bpole_par, double beta_par, double Rns_pa
 
 };
 
-double magnetic_field::Ffun (double theta) {
+double magnetosphere::Ffun (double theta) {
 
 	double res = 0.0;
 	double mu_val = cos(theta);
@@ -107,7 +107,7 @@ double magnetic_field::Ffun (double theta) {
 	return res;
 }
 
-double magnetic_field::dFfun (double theta) {
+double magnetosphere::dFfun (double theta) {
 
 	double res = 0.0;
 	double mu_val = cos(theta);
@@ -128,7 +128,7 @@ int main () {
 	cout << "mu: " <<                 pht.get_mu () << endl; 
 	cout << "omega: " <<              pht.get_omega () << endl;
 
-	magnetic_field (1e14, 0.1, 1e6);
+	magnetosphere (1e14, 0.1, 1e6);
 
 
 
