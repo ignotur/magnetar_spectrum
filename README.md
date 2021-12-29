@@ -23,6 +23,9 @@ where the first parameter is the degree of trigonometric polynomial used to expa
 ## References
 
 Fernandez & Thompson (2007), ApJ, 660, 615
+
 Nobili, Turolla & Zane (2008), MNRAS, 386, 1527
+
 Pavan, Turolla, Zane & Nobili (2009), MNRAS, 395, 753
+
 Thompson, Lyutikov & Kulkarni (2002), ApJ, 574, 332
