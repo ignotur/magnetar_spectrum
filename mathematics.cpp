@@ -17,7 +17,6 @@ double interp1d (double x, int n, double * list_x, double * list_y) {
 
 	pos = (low - v.begin()) - 1; // return to the previous element
 
-	//cout << "pos = " << pos << endl;
 
 	if (list_x[pos] == x) 
 		return list_y[pos]; // check if we already have the value for this element at the grid
@@ -34,10 +33,7 @@ double interp1d (double x, int n, double * list_x, double * list_y) {
 	a = list_y[pos];
 	b = list_y[pos + 1];
 	res = a + t * (b - a);
-
-
-	//cout << "t = " << t << endl;
-
 	return res;
 }
+
 
