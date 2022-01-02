@@ -74,6 +74,9 @@ class photon {
 		double r                      () {return pos_r[0];};
 		double theta                  () {return pos_r[1];};
 		double phi                    () {return pos_r[2];};
+		double x                      () {return pos[0];};
+		double y                      () {return pos[1];};
+		double z                      () {return pos[2];};
 		void   print_pos              () {cout << "x = "<<pos[0]<<" y = "<<pos[1] <<" z = "<<pos[2] << "; r = "<<pos_r[0]<<" theta = "<<pos_r[1] << " phi = "<<pos_r[2] <<endl; };
 		void   print_k                () {cout << "kx = "<<k[0]<<" ky = "<<k[1] <<" kz = "<<k[2]    << "; kr = " <<kr[0] << " k_theta = "<<kr[1] << " k_phi = "<<kr[2] << endl;}
 		bool   is_inside_ns           () {if (pos_r[0] < mg->get_Rns()) return true; else return false;};
@@ -83,10 +86,15 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 
 	double theta0, phi0;
 
+	static bool called_ever;
+
+	if (!called_ever) {
+		called_ever = true;
+		srand (time(NULL));
+	}
+
 
 	b = beaming;
-
-	srand (time (NULL));
 
 	s = rand() % 2 + 1; // Draw the initial polarisation from the uniform distribution
 
@@ -125,7 +133,7 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 	//k[1] = c * cos (theta) * sin (phi); // tbd
 	//k[2] = c * sin (theta); 
 
-	cout << "Be careful, position and k vector might not be right at the moment" << endl;
+	//cout << "Be careful, position and k vector might not be right at the moment" << endl;
 
 }
 
@@ -296,6 +304,7 @@ double photon::propagate_one_step (double delta_t) {
 int main () {
 
 	double dr, dtheta, dphi, dt;
+	photon * pht1;
 
 	magnetosphere mg (1e14, 0.1, 1e6, 1e6);
 
@@ -303,7 +312,7 @@ int main () {
 	cout << "Polarisation state: " << pht.get_polarisation_state() << endl;
 	cout << "Beaming parameter: "<<   pht.get_beaming_parameter () << endl;
 
-	dt = 1e-8;
+	dt = 1e-3;
 
 	pht.print_pos();
 	pht.print_k ();
@@ -335,6 +344,17 @@ int main () {
 	pht.print_pos();
 
 	cout << "Is it inside NS? "<< pht.is_inside_ns() << endl;
+
+	ofstream ofile ("photon_list.txt");
+
+	for (int i = 0; i < 100; i++) {
+		pht1 = new photon (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
+		pht1->propagate_one_step(dt);
+		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() << endl;
+		delete pht1;
+	}
+	ofile.close();
+
 
 	//cout << "mu: " <<                 pht.get_mu () << endl; 
 	//cout << "omega: " <<              pht.get_omega () << endl;
