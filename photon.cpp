@@ -38,7 +38,7 @@ class magnetosphere {
 		double Btheta  (double r, double theta) {return  0.5*Bpole * pow(Rns/r  , 2.0+p) * p * Ffun (theta) / sin(theta);};
 		double Bphi    (double r, double theta) {return Btheta (r, theta) * sqrt(C / (p*(p+1))) * pow(Ffun(theta), 1.0/p);};
 		double B       (double r, double theta) {return sqrt(pow(Br(r, theta), 2.0) + pow(Btheta (r,theta), 2.0) + pow(Bphi(r,theta), 2.0));};
-		double ne      (double r, double theta) {return (p+1) / (4.0 * M_PI * echarge) * (Bphi(r,theta) / Btheta (r,theta)) * B (r, theta) / r / beta ;};
+		double ne      (double r, double theta) {return (p+1) / (4.0 * M_PI * echarge) * (Bphi(r,theta) / Btheta (r,theta)) * B (r, theta) / r / beta_bulk;};
 		double omega_B (double r, double theta) {return echarge * B(r,theta) / (me * speed_of_light);};
 		double get_Rns () {return Rns;};
 		double f_beta  (double beta_v); // Velocity distribution of charged particles in magnetosphere
@@ -57,23 +57,28 @@ class photon {
 		double k [3];    // Instantenious k vector for the photon in the Carthesian coordinate system [kx, ky, kz]
 		double kr[3];    // Instantenious k vector for the photon in the spherical coordinate system [kr, ktheta, kphi]
 		double c;        // Speed of light
-		magnetosphere mg // Object of the twisted magnetosphere class. Physically the magnetosphere through which the photon propagates
+		magnetosphere *mg;// Object of the twisted magnetosphere class. Physically the magnetosphere through which the photon propagates
 
 	public:
-		photon (double theta, double phi, double T, double beaming); // Constructor which corresponds to emission of the photon from the NS surface path with coordinates phi, theta and temperature T
+		photon (double theta, double phi, double T, double beaming, magnetosphere); // Constructor which corresponds to emission of the photon from the NS surface path with coordinates phi, theta and temperature T
 		int    propagate ();
-		double propagate_one_step (); // Method to propagate photon one numerical timestep. It returns back the optical depth
+		double propagate_one_step (double delta_t); // Method to propagate photon one numerical timestep. It returns back the optical depth
 		int    scatter ();            // Method to scatter the photon, i.e. it updates omega and k 
 		int    get_polarisation_state () {return s;};
 		double get_beaming_parameter  () {return b;};
-		double get_mu                 () {return mu;};
+		//double get_mu                 () {return mu;};
 		double get_omega              () {return omega;};
 		double get_mu                 ();
 		double beta_plus              ();
 		double beta_minus             ();
+		void   print_pos              () {cout << "x = "<<pos[0]<<" y = "<<pos[1] <<" z = "<<pos[2] <<endl;};
 };
 
 photon::photon (double theta, double phi, double T, double beaming, magnetosphere mag_NS) {
+
+	double theta0, phi0;
+
+
 	b = beaming;
 
 	srand (time (NULL));
@@ -88,19 +93,34 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 
 	c = 2.99792458e10; // cm/s
 
-	mg = mag_NS;
+	mg = &mag_NS;
 
-	pos[0] = mag_NS.get_Rns * cos (theta) * cos (phi); // Check the coordniate system transformation
-	pos[1] = mag_NS.get_Rns * cos (theta) * sin (phi);
-	pos[2] = mag_NS.get_Rns * sin (theta);
+	pos[0] = mag_NS.get_Rns() * sin (theta) * cos (phi); // Theta is computed from the pole down
+	pos[1] = mag_NS.get_Rns() * sin (theta) * sin (phi);
+	pos[2] = mag_NS.get_Rns() * cos (theta);
+
+	pos_r[0] = mag_NS.get_Rns();
+	pos_r[1] = theta;
+	pos_r[2] = phi;
+
+	kr[0] = c;
+	kr[1] = acos(mu);
+	kr[2] = azimuth;
+
+	theta0 = acos(mu);
+	phi0   = azimuth;
+
+	k[0] = c * sin(theta) * cos(phi) + mag_NS.get_Rns() * cos(theta) * theta0 * cos (phi) - mag_NS.get_Rns() * sin(theta) * sin(phi) * phi0;
+	k[1] = c * sin(theta) * sin(phi) + mag_NS.get_Rns() * cos(theta) * theta0 * sin (phi) + mag_NS.get_Rns() * sin(theta) * cos(phi) * phi0;
+	k[2] = c * cos(theta)            - mag_NS.get_Rns() * sin(theta) * theta0; 
 
 
 	// two rotations in respect to normal: R(azimuth) * R(acos(mu)) * n
-	k[0] = c * cos (theta) * cos (phi); // along the orthogonal direction to NS surface
-	k[1] = c * cos (theta) * sin (phi); // tbd
-	k[2] = c * sin (theta); 
+	//k[0] = c * cos (theta) * cos (phi); // along the orthogonal direction to NS surface
+	//k[1] = c * cos (theta) * sin (phi); // tbd
+	//k[2] = c * sin (theta); 
 
-	cout << "Be careful, position and k vector are not right at the moment" << endl;
+	cout << "Be careful, position and k vector might not be right at the moment" << endl;
 
 }
 
@@ -180,9 +200,9 @@ double photon::get_mu () {
 	double B_inst [3];
 	double res;
 
-	B_inst[0] = mg.Br     (pos_r[0], pos_r[1]);
-	B_inst[1] = mg.Btheta (pos_r[0], pos_r[1]);
-	B_inst[2] = mg.Bphi   (pos_r[0], pos_r[1]);
+	B_inst[0] = mg->Br     (pos_r[0], pos_r[1]);
+	B_inst[1] = mg->Btheta (pos_r[0], pos_r[1]);
+	B_inst[2] = mg->Bphi   (pos_r[0], pos_r[1]);
 
 	res = kr[0] * B_inst[0] + kr[1] * B_inst[1] + kr[2] * B_inst[2]; // scalar product 
 
@@ -196,7 +216,7 @@ double photon::beta_plus () {
 	double mu_val, omega_c, res, omegac2;
 
 	mu_val  = get_mu();
-	omega_c = mg.omega_B (pos_r[0], pos_r[1]);
+	omega_c = mg->omega_B (pos_r[0], pos_r[1]);
 
 	omegac2 = pow(omega_c / omega, 2.0);
 
@@ -215,7 +235,7 @@ double photon::beta_minus () {
 	double mu_val, omega_c, res, omegac2;
 
 	mu_val  = get_mu();
-	omega_c = mg.omega_B (pos_r[0], pos_r[1]);
+	omega_c = mg->omega_B (pos_r[0], pos_r[1]);
 
 	omegac2 = pow(omega_c / omega, 2.0);
 
@@ -226,15 +246,60 @@ double photon::beta_minus () {
 
 	return res;
 }
+
+double photon::propagate_one_step (double delta_t) {
+
+	double k_new[3];
+	double pos_new[3], r_new, theta_new, phi_new;
+	double k_r_new[3];
+
+	pos_new[0] = pos[0] + k[0] * delta_t;
+	pos_new[1] = pos[1] + k[1] * delta_t;
+	pos_new[2] = pos[2] + k[2] * delta_t;
+
+	r_new     = sqrt(pos_new[0]* pos_new[0] + pos_new[1]*pos_new[1] + pos_new[2]*pos_new[2]);
+	theta_new = atan2 (sqrt(pos_new[0]*pos_new[0] + pos_new[1]*pos_new[1])/r_new, pos_new[2] / r_new );
+	phi_new   = atan2 (pos_new[1], pos_new[0]);
+
+	k_r_new[0] = (pos_new[0] * k[0] + pos_new[1] * k[1] + pos_new[2] * k[2]) / r_new;
+	k_r_new[1] = (k_r_new[0] * cos(theta_new) - k[2]) / (r_new * sin(theta_new));
+	k_r_new[2] = (k_r_new[0] * sin(theta_new) * cos(phi_new) + r_new * cos(theta_new) * k_r_new[1] * cos(phi_new) - k[0]) / (sin(theta_new) * sin(phi_new));
+
+	pos[0] = pos_new[0];
+	pos[1] = pos_new[1];
+	pos[2] = pos_new[2];
+
+	pos_r[0] = r_new;
+	pos_r[1] =theta_new;
+	pos_r[2] = phi_new;
+
+	kr[0] = k_r_new[0];
+	kr[1] = k_r_new[1];
+	kr[2] = k_r_new[2];
+
+	return 0;
+
+}
+
+
+
 int main () {
 
-	photon pht (0.0, 0.0, 1.0e6, 1.0);
+	magnetosphere mg (1e14, 0.1, 1e6, 1e6);
+
+	photon pht (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
 	cout << "Polarisation state: " << pht.get_polarisation_state() << endl;
 	cout << "Beaming parameter: "<<   pht.get_beaming_parameter () << endl;
-	cout << "mu: " <<                 pht.get_mu () << endl; 
-	cout << "omega: " <<              pht.get_omega () << endl;
 
-	magnetosphere (1e14, 0.1, 1e6);
+	pht.print_pos();
+	pht.propagate_one_step(0.1);
+	pht.print_pos();
+
+	//cout << "mu: " <<                 pht.get_mu () << endl; 
+	//cout << "omega: " <<              pht.get_omega () << endl;
+
+
+
 
 
 
