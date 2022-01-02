@@ -42,6 +42,7 @@ class magnetosphere {
 		double omega_B (double r, double theta) {return echarge * B(r,theta) / (me * speed_of_light);};
 		double get_Rns () {return Rns;};
 		double f_beta  (double beta_v); // Velocity distribution of charged particles in magnetosphere
+		void   normalise_f_beta ();     // Compute and store numerical coeffitient for f_beta distribution
 };
 
 
@@ -98,7 +99,7 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 
 	s = rand() % 2 + 1; // Draw the initial polarisation from the uniform distribution
 
-	mu = pow (uniform (0.0, 1.0), 1.0 / b); // cos is uniform taking into account the beaming factor
+	mu = pow (uniform (0.0, 1.0), 1.0 / b); // cos is uniform taking into account the beaming factor // assumed to be an angle between normal and photon direction, could instead be an angle between local field direction and photon emission - still need to check
 
 	azimuth = 2.0 * M_PI * uniform (0.0, 1.0);
 
@@ -147,6 +148,7 @@ magnetosphere::magnetosphere (double Bpole_par, double beta_par, double Te_par, 
 	me        = 9.1094e-28; // g
 	speed_of_light = 2.99792458e10; // cm/s
 	re        = 2.8179403227e-13; // cm
+	kB        = 1.3807e-16;       // cm^2 g s^-2 K^-1
 
 	ifstream infile ("F_magnetosphere.txt");
 
@@ -162,6 +164,10 @@ magnetosphere::magnetosphere (double Bpole_par, double beta_par, double Te_par, 
 		infile >> mu[i] >> F[i];
 
 	}
+
+	norm_f = 1.0;
+
+	normalise_f_beta ();
 
 	cout << "We initiliased twisted magnetosphere using file F_magnetosphere.txt" << endl;
 	cout << "N = " << N << " \t p = " << p << " \t C = "<< C << endl;
@@ -201,9 +207,40 @@ double magnetosphere::f_beta  (double beta_v) {
 	Theta_e = kB * Te / (me * speed_of_light);
 	gamma_ap = gamma_v * gamma_bulk * (1.0 - beta_v * beta_bulk);
 
+	//cout << "Theta_e = "<< Theta_e << "\t" << "gamma_ap = " << gamma_ap << endl;
+
 	res = norm_f * exp (-gamma_ap / Theta_e); // eq. (4) in Nobili, Turolla & Zane, normalised numerically 
 	
 	return res;
+
+}
+
+void   magnetosphere::normalise_f_beta () {
+
+	double k1, k2, k3, k4, res, dbeta;
+	int N;
+
+	N = 1000.0;
+
+	dbeta = 2.0 / N;
+
+	res = 0.0;
+
+	for (int i = 0; i < N-1; i++) {
+
+		k1 = f_beta (-1.0 + dbeta * i);
+		k2 = f_beta (-1.0 + dbeta * (i + 0.5));
+		k4 = f_beta (-1.0 + dbeta * (i + 1.0));
+		res = res + (k1 + 4.0 * k2 + k4) / 6.0 * dbeta;
+		//cout << i << "\t"<<-1.0 + dbeta * i << "\t" << k1 << endl;
+
+	}
+
+	norm_f = 1.0 / res;
+
+	cout << norm_f << endl;
+
+	//return res;
 
 }
 
@@ -354,6 +391,11 @@ int main () {
 		delete pht1;
 	}
 	ofile.close();
+
+
+	//mg.normalise_f_beta ();
+	//mg.normalise_f_beta ();
+
 
 
 	//cout << "mu: " <<                 pht.get_mu () << endl; 
