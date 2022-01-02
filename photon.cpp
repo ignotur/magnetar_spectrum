@@ -71,7 +71,12 @@ class photon {
 		double get_mu                 ();
 		double beta_plus              ();
 		double beta_minus             ();
-		void   print_pos              () {cout << "x = "<<pos[0]<<" y = "<<pos[1] <<" z = "<<pos[2] <<endl;};
+		double r                      () {return pos_r[0];};
+		double theta                  () {return pos_r[1];};
+		double phi                    () {return pos_r[2];};
+		void   print_pos              () {cout << "x = "<<pos[0]<<" y = "<<pos[1] <<" z = "<<pos[2] << "; r = "<<pos_r[0]<<" theta = "<<pos_r[1] << " phi = "<<pos_r[2] <<endl; };
+		void   print_k                () {cout << "kx = "<<k[0]<<" ky = "<<k[1] <<" kz = "<<k[2]    << "; kr = " <<kr[0] << " k_theta = "<<kr[1] << " k_phi = "<<kr[2] << endl;}
+		bool   is_inside_ns           () {if (pos_r[0] < mg->get_Rns()) return true; else return false;};
 };
 
 photon::photon (double theta, double phi, double T, double beaming, magnetosphere mag_NS) {
@@ -263,7 +268,12 @@ double photon::propagate_one_step (double delta_t) {
 
 	k_r_new[0] = (pos_new[0] * k[0] + pos_new[1] * k[1] + pos_new[2] * k[2]) / r_new;
 	k_r_new[1] = (k_r_new[0] * cos(theta_new) - k[2]) / (r_new * sin(theta_new));
-	k_r_new[2] = (k_r_new[0] * sin(theta_new) * cos(phi_new) + r_new * cos(theta_new) * k_r_new[1] * cos(phi_new) - k[0]) / (sin(theta_new) * sin(phi_new));
+	if ( abs(phi_new) > 0.1) 
+		k_r_new[2] = (k_r_new[0] * sin(theta_new) * cos(phi_new) + r_new * cos(theta_new) * k_r_new[1] * cos(phi_new) - k[0]) / (r_new * sin(theta_new) * sin(phi_new));
+	else
+		k_r_new[2] = (k[1] - k_r_new[0] * sin(theta_new) * sin(phi_new) + r_new * cos(theta_new) * k_r_new[1] * sin(phi_new)) / (r_new * sin(theta_new) * cos(phi_new));
+
+
 
 	pos[0] = pos_new[0];
 	pos[1] = pos_new[1];
@@ -285,15 +295,46 @@ double photon::propagate_one_step (double delta_t) {
 
 int main () {
 
+	double dr, dtheta, dphi, dt;
+
 	magnetosphere mg (1e14, 0.1, 1e6, 1e6);
 
 	photon pht (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
 	cout << "Polarisation state: " << pht.get_polarisation_state() << endl;
 	cout << "Beaming parameter: "<<   pht.get_beaming_parameter () << endl;
 
+	dt = 1e-8;
+
 	pht.print_pos();
-	pht.propagate_one_step(0.1);
+	pht.print_k ();
+
+	dr     = - pht.r();
+	dtheta = - pht.theta();
+	dphi   = - pht.phi ();
+
+	pht.propagate_one_step(dt);
 	pht.print_pos();
+
+	dr     += pht.r();
+	dtheta += pht.theta();
+	dphi   += pht.phi();
+
+	cout << "kr = " << dr / dt << " ktheta = " << dtheta / dt << " kphi = " << dphi / dt << endl;
+
+	pht.print_k();
+
+
+
+	pht.propagate_one_step(dt);
+	pht.print_pos();
+	pht.propagate_one_step(dt);
+	pht.print_pos();
+	pht.propagate_one_step(dt);
+	pht.print_pos();
+	pht.propagate_one_step(dt);
+	pht.print_pos();
+
+	cout << "Is it inside NS? "<< pht.is_inside_ns() << endl;
 
 	//cout << "mu: " <<                 pht.get_mu () << endl; 
 	//cout << "omega: " <<              pht.get_omega () << endl;
