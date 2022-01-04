@@ -48,16 +48,17 @@ class magnetosphere {
 
 class photon {
 	private:
-		double b;        // Beaming parameter
-		double omega;    // Photon frequency 
-		int s;           // Photon polarisation state: 0 - photon does not exist; 1 - ordinary mode; 2 - extraordinary mode
-		double mu;       // Cosine of the angle between the initial photon direction and magnetic field
-		double azimuth;  // Azimuth angle for photon
-		double pos [3];  // Instantenious location of photon in the Carthesian coordinate system [x,y,z]
-		double pos_r [3];// Instantenious location of photon in the spherical coordinate system [r,theta,phi]
-		double k [3];    // Instantenious k vector for the photon in the Carthesian coordinate system [kx, ky, kz]
-		double kr[3];    // Instantenious k vector for the photon in the spherical coordinate system [kr, ktheta, kphi]
-		double c;        // Speed of light
+		double b;         // Beaming parameter
+		double omega;     // Photon frequency 
+		int s;            // Photon polarisation state: 0 - photon does not exist; 1 - ordinary mode; 2 - extraordinary mode
+		double mu;        // Cosine of the angle between the initial photon direction and magnetic field
+		double azimuth;   // Azimuth angle for photon
+		double pos [3];   // Instantenious location of photon in the Carthesian coordinate system [x,y,z]
+		double pos_r [3]; // Instantenious location of photon in the spherical coordinate system [r,theta,phi]
+		double k [3];     // Instantenious k vector for the photon in the Carthesian coordinate system [kx, ky, kz]
+		double kr[3];     // Instantenious k vector for the photon in the spherical coordinate system [kr, ktheta, kphi]
+		double c;         // Speed of light
+		double re;        // Classical electron radius
 		magnetosphere *mg;// Object of the twisted magnetosphere class. Physically the magnetosphere through which the photon propagates
 
 	public:
@@ -105,7 +106,8 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 
 	omega = sed_planck (T);
 
-	c = 2.99792458e10; // cm/s
+	c  = 2.99792458e10; // cm/s
+	re = 2.8179403227e-13; // cm 
 
 	mg = &mag_NS;
 
@@ -127,12 +129,6 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 	k[0] = c * sin(theta) * cos(phi) + mag_NS.get_Rns() * cos(theta) * theta0 * cos (phi) - mag_NS.get_Rns() * sin(theta) * sin(phi) * phi0;
 	k[1] = c * sin(theta) * sin(phi) + mag_NS.get_Rns() * cos(theta) * theta0 * sin (phi) + mag_NS.get_Rns() * sin(theta) * cos(phi) * phi0;
 	k[2] = c * cos(theta)            - mag_NS.get_Rns() * sin(theta) * theta0; 
-
-
-	// two rotations in respect to normal: R(azimuth) * R(acos(mu)) * n
-	//k[0] = c * cos (theta) * cos (phi); // along the orthogonal direction to NS surface
-	//k[1] = c * cos (theta) * sin (phi); // tbd
-	//k[2] = c * sin (theta); 
 
 	//cout << "Be careful, position and k vector might not be right at the moment" << endl;
 
@@ -207,7 +203,7 @@ double magnetosphere::f_beta  (double beta_v) {
 	Theta_e = kB * Te / (me * speed_of_light * speed_of_light);
 	gamma_ap = gamma_v * gamma_bulk * (1.0 - beta_v * beta_bulk);
 
-	cout << "Theta_e = "<< Theta_e << "\t" << "gamma_ap = " << gamma_ap << endl;
+	//cout << "Theta_e = "<< Theta_e << "\t" << "gamma_ap = " << gamma_ap << endl;
 
 	res = norm_f * exp (-gamma_ap / Theta_e); // eq. (4) in Nobili, Turolla & Zane, normalised numerically 
 	
@@ -249,12 +245,19 @@ double photon::get_mu () {
 
 	double B_inst [3];
 	double res;
+	double module_kr;
+	double module_B;
 
 	B_inst[0] = mg->Br     (pos_r[0], pos_r[1]);
 	B_inst[1] = mg->Btheta (pos_r[0], pos_r[1]);
 	B_inst[2] = mg->Bphi   (pos_r[0], pos_r[1]);
 
 	res = kr[0] * B_inst[0] + kr[1] * B_inst[1] + kr[2] * B_inst[2]; // scalar product 
+
+	module_kr = sqrt(kr[0]*kr[0] + kr[1]*kr[1] + kr[2]*kr[2]);
+	module_B  = sqrt(B_inst[0]*B_inst[0] + B_inst[1]*B_inst[1] + B_inst[2]*B_inst[2]);
+
+	res = res / module_kr / module_B;
 
 	return res;
 }
@@ -302,6 +305,10 @@ double photon::propagate_one_step (double delta_t) {
 	double k_new[3];
 	double pos_new[3], r_new, theta_new, phi_new;
 	double k_r_new[3];
+	double beta_plus_v, beta_minus_v;
+	double omega_B;
+	double dtau;
+	double mu_v;
 
 	pos_new[0] = pos[0] + k[0] * delta_t;
 	pos_new[1] = pos[1] + k[1] * delta_t;
@@ -332,7 +339,30 @@ double photon::propagate_one_step (double delta_t) {
 	kr[1] = k_r_new[1];
 	kr[2] = k_r_new[2];
 
-	return 0;
+	beta_plus_v  = beta_plus();
+	beta_minus_v = beta_minus();
+	omega_B = mg->omega_B (pos_r[0], pos_r[1]);
+	mu_v = get_mu();
+
+	if ((beta_plus_v != -20) && (beta_minus_v != -20)) {
+
+		if (s == 1) {
+			dtau = 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * ( abs(mu_v - beta_plus_v) / (1.0 - mu_v*beta_plus_v) * mg->f_beta  (beta_plus_v) + abs(mu_v - beta_minus_v) / (1.0 - mu_v*beta_minus_v) * mg->f_beta  (beta_minus_v) * c * delta_t  );
+		}
+		else if (s == 2) {
+			dtau = 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * ( 1.0 / abs(mu_v - beta_plus_v) * (1.0 - mu_v*beta_plus_v) * mg->f_beta  (beta_plus_v) + 1.0/abs(mu_v - beta_minus_v) * (1.0 - mu_v*beta_minus_v) * mg->f_beta  (beta_minus_v) * c * delta_t );
+		}
+
+	}
+	else 
+		dtau = 0.0;
+
+	cout <<"Comparison of optical depths: "<< 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * c * delta_t << "\t" << dtau << endl;
+	cout <<"Remaining factors are: f(beta_k) = "<< mg->f_beta  (beta_minus_v) <<"\t" << mg->f_beta  (beta_plus_v) <<endl;
+	cout <<"mu_v - beta_plus_v = "<<abs(mu_v - beta_plus_v) << endl;
+	cout <<"mu_v = "<<mu_v << endl;
+
+	return dtau;
 
 }
 
