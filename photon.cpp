@@ -15,7 +15,8 @@ using namespace std;
 
 class magnetosphere {
 	private:
-		double p;         // Parameter describing the magnetic field twist
+		int idk;
+		double p1;         // Parameter describing the magnetic field twist
 		double C;         // Eigenvalue
 		int N;            // Angular resolution for the differential equation
 		double * mu;      // Pointer for mesh for cos \theta  
@@ -34,11 +35,12 @@ class magnetosphere {
 		magnetosphere (double Bpole_par, double beta_par, double Te_par, double Rns); // Initialise the twisted magnetosphere configuration by reading file with solved equation
 		double Ffun    (double theta);
 		double dFfun   (double theta);
-		double Br      (double r, double theta) {return -0.5*Bpole * pow( Rns/r , 2.0+p) * dFfun (theta);};
-		double Btheta  (double r, double theta) {return  0.5*Bpole * pow(Rns/r  , 2.0+p) * p * Ffun (theta) / sin(theta);};
-		double Bphi    (double r, double theta) {return Btheta (r, theta) * sqrt(C / (p*(p+1))) * pow(Ffun(theta), 1.0/p);};
+		double get_p   () {return p1;};
+		double Br      (double r, double theta) {return -0.5*Bpole * pow( Rns/r , 2.0+p1) * dFfun (theta);};
+		double Btheta  (double r, double theta) {return  0.5*Bpole * pow(Rns/r  , 2.0+p1) * p1 * Ffun (theta) / sin(theta);};
+		double Bphi    (double r, double theta) {return Btheta (r, theta) * sqrt(C / (p1*(p1+1))) * pow(Ffun(theta), 1.0/p1);};
 		double B       (double r, double theta) {return sqrt(pow(Br(r, theta), 2.0) + pow(Btheta (r,theta), 2.0) + pow(Bphi(r,theta), 2.0));};
-		double ne      (double r, double theta) {return (p+1) / (4.0 * M_PI * echarge) * (Bphi(r,theta) / Btheta (r,theta)) * B (r, theta) / r / beta_bulk;};
+		double ne      (double r, double theta) {return (p1+1) / (4.0 * M_PI * echarge) * (Bphi(r,theta) / Btheta (r,theta)) * B (r, theta) / r / beta_bulk;};
 		double omega_B (double r, double theta) {return echarge * B(r,theta) / (me * speed_of_light);};
 		double get_Rns () {return Rns;};
 		double f_beta  (double beta_v); // Velocity distribution of charged particles in magnetosphere
@@ -59,6 +61,7 @@ class photon {
 		double kr[3];     // Instantenious k vector for the photon in the spherical coordinate system [kr, ktheta, kphi]
 		double c;         // Speed of light
 		double re;        // Classical electron radius
+		int max_number_of_propagation_steps; // maximum number of integration steps before the photon get discarded
 		magnetosphere *mg;// Object of the twisted magnetosphere class. Physically the magnetosphere through which the photon propagates
 
 	public:
@@ -82,6 +85,7 @@ class photon {
 		void   print_pos              () {cout << "x = "<<pos[0]<<" y = "<<pos[1] <<" z = "<<pos[2] << "; r = "<<pos_r[0]<<" theta = "<<pos_r[1] << " phi = "<<pos_r[2] <<endl; };
 		void   print_k                () {cout << "kx = "<<k[0]<<" ky = "<<k[1] <<" kz = "<<k[2]    << "; kr = " <<kr[0] << " k_theta = "<<kr[1] << " k_phi = "<<kr[2] << endl;}
 		bool   is_inside_ns           () {if (pos_r[0] < mg->get_Rns()) return true; else return false;};
+		double dist_from_ns_center    () {return pos_r[0];};
 };
 
 photon::photon (double theta, double phi, double T, double beaming, magnetosphere mag_NS) {
@@ -109,6 +113,8 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 	c  = 2.99792458e10; // cm/s
 	re = 2.8179403227e-13; // cm 
 
+	max_number_of_propagation_steps = 1000;
+
 	mg = &mag_NS;
 
 	pos[0] = mag_NS.get_Rns() * sin (theta) * cos (phi); // Theta is computed from the pole down
@@ -131,6 +137,8 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 	k[2] = c * cos(theta)            - mag_NS.get_Rns() * sin(theta) * theta0; 
 
 	//cout << "Be careful, position and k vector might not be right at the moment" << endl;
+	//
+	//cout << "At this moment p = "<<mg->get_p()<<endl;
 
 }
 
@@ -149,7 +157,7 @@ magnetosphere::magnetosphere (double Bpole_par, double beta_par, double Te_par, 
 	ifstream infile ("F_magnetosphere.txt");
 
 	infile >> N;
-	infile >> p; 
+	infile >> p1; 
 	infile >> C;
 
 	mu = new double [N];
@@ -166,7 +174,7 @@ magnetosphere::magnetosphere (double Bpole_par, double beta_par, double Te_par, 
 	normalise_f_beta ();
 
 	cout << "We initiliased twisted magnetosphere using file F_magnetosphere.txt" << endl;
-	cout << "N = " << N << " \t p = " << p << " \t C = "<< C << endl;
+	cout << "N = " << N << " \t p = " << (double) p1 << " \t C = "<< C << endl;
 
 };
 
@@ -258,6 +266,9 @@ double photon::get_mu () {
 	module_B  = sqrt(B_inst[0]*B_inst[0] + B_inst[1]*B_inst[1] + B_inst[2]*B_inst[2]);
 
 	res = res / module_kr / module_B;
+
+	//cout << "Intermediate steps of mu calculations: vec B = "<<B_inst[0]<<" "<<B_inst[1]<<" "<<B_inst[2]<<"\t vec kr = "<<kr[0]<<" "<<kr[1]<<" "<<kr[2]<<endl;
+
 
 	return res;
 }
@@ -356,7 +367,11 @@ double photon::propagate_one_step (double delta_t) {
 	}
 	else 
 		dtau = 0.0;
-
+  	
+        cout <<"pos = "<<pos_r[0]<<"\t"<< pos_r[1] <<" in respect to NS radius = "<<pos_r[0] / mg->get_Rns() <<endl;
+	cout <<"Bphi = "<<mg->Bphi (pos_r[0], pos_r[1]) << "\t Btheta = "<< mg->Btheta(pos_r[0], pos_r[1]) <<endl;
+	cout <<"What is p? = "<<mg->get_p() <<endl;
+        cout <<"Magnetospheric properties: "<<mg->ne (pos_r[0], pos_r[1]) << endl;
 	cout <<"Comparison of optical depths: "<< 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * c * delta_t << "\t" << dtau << endl;
 	cout <<"Remaining factors are: f(beta_k) = "<< mg->f_beta  (beta_minus_v) <<"\t" << mg->f_beta  (beta_plus_v) <<endl;
 	cout <<"mu_v - beta_plus_v = "<<abs(mu_v - beta_plus_v) << endl;
@@ -364,6 +379,65 @@ double photon::propagate_one_step (double delta_t) {
 
 	return dtau;
 
+}
+
+int photon::scatter () {
+
+	double u1, u2;
+
+	u1 = uniform (0.0, 1.0);
+	u2 = uniform (0.0, 1.0);
+
+	if ((s == 1) && (u1 > 0.25))
+		s = 2;
+	if ((s == 2) && (u1 > 0.75))
+		s = 1;
+
+	cout << "Scattering" << endl;
+
+	return 0;
+}
+
+int photon::propagate () {
+
+	double u, tau, dt;
+	int cnt;
+	bool success;
+
+	u = uniform (0.0, 1.0);
+
+	cnt = 0;
+	tau = 0.0;
+	dt = 1e-5; // i.e. distance of ~3 km 
+	success = true;
+	while (true) {
+
+		tau += propagate_one_step (dt);
+		cnt += 1;
+
+		if (cnt > max_number_of_propagation_steps) {
+			success = false;
+			break;
+		}
+
+		if (tau > - log(u))
+			scatter();
+
+		if (is_inside_ns ()) {
+			success = false;
+			break;
+		}
+
+		if (dist_from_ns_center () > 1000 * mg->get_Rns()) {
+			success = true;
+			break;
+		}
+
+		cout << cnt <<"\t" << tau <<endl;
+
+	}
+
+	return success;
 }
 
 
@@ -374,6 +448,8 @@ int main () {
 	photon * pht1;
 
 	magnetosphere mg (1e14, 0.1, 348135750.1848, 1e6);
+
+	cout << "Our original p = "<<mg.get_p() <<endl;;
 
 	photon pht (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
 	cout << "Polarisation state: " << pht.get_polarisation_state() << endl;
@@ -399,28 +475,36 @@ int main () {
 
 	pht.print_k();
 
+	cout << "First step propagation: "<<pht.propagate_one_step(dt) << endl;
+
+	cout << mg.get_p()<<endl;
+
+	pht.propagate();
 
 
-	pht.propagate_one_step(dt);
-	pht.print_pos();
-	pht.propagate_one_step(dt);
-	pht.print_pos();
-	pht.propagate_one_step(dt);
-	pht.print_pos();
-	pht.propagate_one_step(dt);
-	pht.print_pos();
 
-	cout << "Is it inside NS? "<< pht.is_inside_ns() << endl;
 
-	ofstream ofile ("photon_list.txt");
 
-	for (int i = 0; i < 100; i++) {
-		pht1 = new photon (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
-		pht1->propagate_one_step(dt);
-		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() << endl;
-		delete pht1;
-	}
-	ofile.close();
+	//pht.propagate_one_step(dt);
+	//pht.print_pos();
+	//pht.propagate_one_step(dt);
+	//pht.print_pos();
+	//pht.propagate_one_step(dt);
+	//pht.print_pos();
+	//pht.propagate_one_step(dt);
+	//pht.print_pos();
+
+	//cout << "Is it inside NS? "<< pht.is_inside_ns() << endl;
+
+	//ofstream ofile ("photon_list.txt");
+
+	//for (int i = 0; i < 100; i++) {
+	//	pht1 = new photon (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
+//		pht1->propagate_one_step(dt);
+//		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() << endl;
+//		delete pht1;
+//	}
+//	ofile.close();
 
 
 	//mg.normalise_f_beta ();
