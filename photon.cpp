@@ -204,10 +204,10 @@ double magnetosphere::f_beta  (double beta_v) {
 	double res;
 	gamma_v    = 1.0 / (1.0 - beta_v*beta_v);
 	gamma_bulk = 1.0 / (1.0 - beta_bulk*beta_bulk);
-	Theta_e = kB * Te / (me * speed_of_light);
+	Theta_e = kB * Te / (me * speed_of_light * speed_of_light);
 	gamma_ap = gamma_v * gamma_bulk * (1.0 - beta_v * beta_bulk);
 
-	//cout << "Theta_e = "<< Theta_e << "\t" << "gamma_ap = " << gamma_ap << endl;
+	cout << "Theta_e = "<< Theta_e << "\t" << "gamma_ap = " << gamma_ap << endl;
 
 	res = norm_f * exp (-gamma_ap / Theta_e); // eq. (4) in Nobili, Turolla & Zane, normalised numerically 
 	
@@ -238,7 +238,7 @@ void   magnetosphere::normalise_f_beta () {
 
 	norm_f = 1.0 / res;
 
-	cout << norm_f << endl;
+	cout << "Our new normalisation factor is: "<<norm_f << endl;
 
 	//return res;
 
@@ -343,7 +343,7 @@ int main () {
 	double dr, dtheta, dphi, dt;
 	photon * pht1;
 
-	magnetosphere mg (1e14, 0.1, 1e6, 1e6);
+	magnetosphere mg (1e14, 0.1, 348135750.1848, 1e6);
 
 	photon pht (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
 	cout << "Polarisation state: " << pht.get_polarisation_state() << endl;
