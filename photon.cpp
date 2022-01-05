@@ -113,7 +113,7 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 	c  = 2.99792458e10; // cm/s
 	re = 2.8179403227e-13; // cm 
 
-	max_number_of_propagation_steps = 1000;
+	max_number_of_propagation_steps = 5000;
 
 	mg = &mag_NS;
 
@@ -382,23 +382,41 @@ double photon::propagate_one_step (double delta_t) {
 
 }
 
+// Scattering event - photon gets new polarisation, frequency and k-vector
 int photon::scatter () {
 
-	double u1, u2;
+	double u1, u2, u3, u4;
+	double phi_new, theta_new, s_new;
 
 	u1 = uniform (0.0, 1.0);
 	u2 = uniform (0.0, 1.0);
+	u3 = uniform (0.0, 1.0);
+	u4 = uniform (0.0, 1.0);
 
 	if ((s == 1) && (u1 > 0.25))
-		s = 2;
+		s_new = 2;
 	if ((s == 2) && (u1 > 0.75))
-		s = 1;
+		s_new = 1;
+
+	if (((s == 1) && (s_new == 1)) || ((s==2) && (s_new==1))) {
+		theta_new = 2.0 * u4 - 1.0;
+		theta_new = pow(theta_new, 1.0 / 3.0);
+		theta_new = acos(theta_new);
+	}
+	if (((s == 1) && (s_new == 2)) || ((s==2) && (s_new==2))) {
+		theta_new = 2.0 * u4 - 1.0;
+		theta_new = acos(theta_new);
+	}
+
+	phi_new = 2.0 * M_PI * u3;
 
 	cout << "Scattering" << endl;
 
 	return 0;
 }
 
+
+// In this function we integrate the photon motion
 int photon::propagate () {
 
 	double u, tau, dt;
@@ -411,7 +429,7 @@ int photon::propagate () {
 	tau = 0.0;
 	dt = 1e-5; // i.e. distance of ~3 km 
 	success = true;
-	while (true) {
+	while (true) { 
 
 		tau += propagate_one_step (dt);
 		cnt += 1;
@@ -421,15 +439,19 @@ int photon::propagate () {
 			break;
 		}
 
-		if (tau > - log(u))
+		if (tau > - log(u)) {  // Scattering occured, it means that we integrate the optical depth again
 			scatter();
+			tau = 0.0;
 
-		if (is_inside_ns ()) {
+		}
+
+
+		if (is_inside_ns ()) { // Photon was scattered back into NS, we disregard it
 			success = false;
 			break;
 		}
 
-		if (dist_from_ns_center () > 1000 * mg->get_Rns()) {
+		if (dist_from_ns_center () > 1000 * mg->get_Rns()) { // Photon left the magnetosphere and has to be recorded
 			success = true;
 			break;
 		}
