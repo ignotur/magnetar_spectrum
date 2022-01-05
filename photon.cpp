@@ -40,6 +40,9 @@ class magnetosphere {
 		double Btheta  (double r, double theta) {return  0.5*Bpole * pow(Rns/r  , 2.0+p1) * p1 * Ffun (theta) / sin(theta);};
 		double Bphi    (double r, double theta) {return Btheta (r, theta) * sqrt(C / (p1*(p1+1))) * pow(Ffun(theta), 1.0/p1);};
 		double B       (double r, double theta) {return sqrt(pow(Br(r, theta), 2.0) + pow(Btheta (r,theta), 2.0) + pow(Bphi(r,theta), 2.0));};
+		double Bx      (double r, double theta, double phi) {return Br (r, theta) * sin(theta) * cos(phi) + Btheta (r,theta) * cos(theta)*cos(phi) - Bphi (r,theta) * sin(phi); };
+		double By      (double r, double theta, double phi) {return Br (r, theta) * sin(theta) * sin(phi) + Btheta (r,theta) * cos(theta)*sin(phi) + Bphi (r,theta) * cos(phi); };
+		double Bz      (double r, double theta, double phi) {return Br (r, theta) * cos(theta)  - Btheta (r,theta) * sin(theta); };
 		double ne      (double r, double theta) {return (p1+1) / (4.0 * M_PI * echarge) * (Bphi(r,theta) / Btheta (r,theta)) * B (r, theta) / r / beta_bulk;};
 		double omega_B (double r, double theta) {return echarge * B(r,theta) / (me * speed_of_light);};
 		double get_Rns () {return Rns;};
@@ -434,8 +437,9 @@ double photon::propagate_one_step (double delta_t) {
 int photon::scatter () {
 
 	double u1, u2, u3, u4;
-	double phi_new, theta_new, s_new;
+	double phi_new, theta_new, s_new, new_mu;
 	double beta_plus_v, beta_minus_v;
+	double beta_val;
 
 	u1 = uniform (0.0, 1.0);
 	u2 = uniform (0.0, 1.0);
@@ -450,17 +454,32 @@ int photon::scatter () {
 	if (((s == 1) && (s_new == 1)) || ((s==2) && (s_new==1))) {
 		theta_new = 2.0 * u4 - 1.0;
 		theta_new = pow(theta_new, 1.0 / 3.0);
-		theta_new = acos(theta_new);
+		//theta_new = acos(theta_new);
 	}
 	if (((s == 1) && (s_new == 2)) || ((s==2) && (s_new==2))) {
 		theta_new = 2.0 * u4 - 1.0;
-		theta_new = acos(theta_new);
+		//theta_new = acos(theta_new);
 	}
 
 	phi_new = 2.0 * M_PI * u3;
 
 	beta_plus_v  = beta_plus();
 	beta_minus_v = beta_minus();
+
+	if ((s == 1) && (u2 < Sf(1,1) / (Sf(1,1) + Sf(1,2)) ))
+		beta_val = beta_plus_v;
+	else if (s == 1) 
+		beta_val = beta_minus_v;
+	if ((s == 2) && (u2 < Sf(2,1) / (Sf(2,1) + Sf(2,2)) ))
+		beta_val = beta_plus_v;
+	else if (s == 2)
+		beta_val = beta_minus_v;
+
+	new_mu = (theta_new + beta_val) / (1.0 + beta_val * theta_new);
+
+
+	
+
 
 
 	cout << "Scattering" << endl;
