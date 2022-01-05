@@ -91,6 +91,7 @@ class photon {
 		double dist_from_ns_center    () {return pos_r[0];};
 		double Sf                     (int, int);
 		void   update_kr              ();
+		double get_E_keV              () {return 6.582119569e-16*omega / 1.0e3;};
 };
 
 photon::photon (double theta, double phi, double T, double beaming, magnetosphere mag_NS) {
@@ -433,7 +434,7 @@ double photon::propagate_one_step (double delta_t) {
 	//cout <<"Remaining factors are: f(beta_k) = "<< mg->f_beta  (beta_minus_v) <<"\t" << mg->f_beta  (beta_plus_v) <<endl;
 	//cout <<"mu_v - beta_plus_v = "<<abs(mu_v - beta_plus_v) << endl;
 	//cout <<"mu_v = "<<mu_v << endl;
-	cout <<"Distance from NS = "<<pos_r[0]/1e6 <<" mu_v = "<<mu_v<<"\t k0*delta_t = "<<k[0]*delta_t/1e6<<endl;
+	//cout <<"Distance from NS = "<<pos_r[0]/1e6 <<" mu_v = "<<mu_v<<"\t k0*delta_t = "<<k[0]*delta_t/1e6<<endl;
 
 	return dtau;
 
@@ -540,14 +541,14 @@ int photon::scatter () {
 	k_new[2] *= c;
 
 
-	cout << "Before the scattering: k = "<<k[0]<<" "<<k[1]<<" "<<k[2]<<" k_new = "<<k_new[0]<<" "<<k_new[1] <<" "<<k_new[2]<<endl;
+	//cout << "Before the scattering: k = "<<k[0]<<" "<<k[1]<<" "<<k[2]<<" k_new = "<<k_new[0]<<" "<<k_new[1] <<" "<<k_new[2]<<endl;
 
 
 	omega_new = pow(1.0 / (1.0 - beta_val*beta_val), 2.0) * omega * (1.0 - beta_val * mu_val) * (1.0 + beta_val * new_mu);
 
-	cout << "Omega before scattering "<< omega << " after "<<omega_new <<endl;
+	//cout << "Omega before scattering "<< omega << " after "<<omega_new <<endl;
 
-	cout << "Scattering" << endl;
+	//cout << "Scattering" << endl;
 
 	k[0] = k_new[0];
 	k[1] = k_new[1];
@@ -559,9 +560,9 @@ int photon::scatter () {
 
 	s = s_new;
 
-	cout << "Check if our update of mu makes sence - mu_new = "<<new_mu << " compute mu = "<<get_mu()<<endl;
-	cout << "Directly compute mu = "<<(Bx*k_new[0] + By*k_new[1] + Bz*k_new[2]) / c <<endl;
-	exit(0);
+	//cout << "Check if our update of mu makes sence - mu_new = "<<new_mu << " compute mu = "<<get_mu()<<endl;
+	//cout << "Directly compute mu = "<<(Bx*k_new[0] + By*k_new[1] + Bz*k_new[2]) / c <<endl;
+	//exit(0);
 
 	return 0;
 }
@@ -607,7 +608,7 @@ int photon::propagate () {
 			break;
 		}
 
-		cout << cnt <<"\t" << tau <<endl;
+		//cout << cnt <<"\t" << tau <<endl;
 
 	}
 
@@ -618,25 +619,26 @@ int photon::propagate () {
 
 int main () {
 
-	double dr, dtheta, dphi, dt;
+	//double dr, dtheta, dphi, dt;
 	photon * pht1;
+	bool success;
 
 	magnetosphere mg (1e14, 0.1, 348135750.1848, 1.e6);
 
-	cout << "Our original p = "<<mg.get_p() <<endl;;
+	//cout << "Our original p = "<<mg.get_p() <<endl;;
 
-	photon pht (M_PI/2.0, 0.0, 1.e6, 1.0, mg);
-	cout << "Polarisation state: " << pht.get_polarisation_state() << endl;
-	cout << "Beaming parameter: "<<   pht.get_beaming_parameter () << endl;
+	//photon pht (M_PI/2.0, 0.0, 1.e6, 1.0, mg);
+	//cout << "Polarisation state: " << pht.get_polarisation_state() << endl;
+	//cout << "Beaming parameter: "<<   pht.get_beaming_parameter () << endl;
 
-	dt = 1e-3;
+	//dt = 1e-3;
 
-	pht.print_pos();
-	pht.print_k ();
+	//pht.print_pos();
+	//pht.print_k ();
 
-	dr     = - pht.r();
-	dtheta = - pht.theta();
-	dphi   = - pht.phi ();
+	//dr     = - pht.r();
+	//dtheta = - pht.theta();
+	//dphi   = - pht.phi ();
 
 	//pht.propagate_one_step(dt);
 	//pht.print_pos();
@@ -651,9 +653,9 @@ int main () {
 
 	//cout << "First step propagation: "<<pht.propagate_one_step(dt) << endl;
 
-	cout << mg.get_p()<<endl;
+	//cout << mg.get_p()<<endl;
 
-	pht.propagate();
+	//pht.propagate();
 
 
 
@@ -670,15 +672,22 @@ int main () {
 
 	//cout << "Is it inside NS? "<< pht.is_inside_ns() << endl;
 
-	//ofstream ofile ("photon_list.txt");
+	ofstream ofile ("photon_list.txt");
 
-	//for (int i = 0; i < 100; i++) {
-	//	pht1 = new photon (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
+	for (int i = 0; i < 100; i++) {
+		pht1 = new photon (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
+		success = pht1->propagate();
+
+		cout <<i<<"\t"<<success<<endl;
+
+		if (success)
+			ofile << pht1->theta() <<"\t"<<pht1->phi() <<"\t"<<pht1->get_E_keV()<<endl;
+
 //		pht1->propagate_one_step(dt);
 //		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() << endl;
 //		delete pht1;
-//	}
-//	ofile.close();
+	}
+	ofile.close();
 
 
 	//mg.normalise_f_beta ();
