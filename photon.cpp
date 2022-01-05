@@ -86,6 +86,7 @@ class photon {
 		void   print_k                () {cout << "kx = "<<k[0]<<" ky = "<<k[1] <<" kz = "<<k[2]    << "; kr = " <<kr[0] << " k_theta = "<<kr[1] << " k_phi = "<<kr[2] << endl;}
 		bool   is_inside_ns           () {if (pos_r[0] < mg->get_Rns()) return true; else return false;};
 		double dist_from_ns_center    () {return pos_r[0];};
+		double Sf                     (int, int);
 };
 
 photon::photon (double theta, double phi, double T, double beaming, magnetosphere mag_NS) {
@@ -311,6 +312,50 @@ double photon::beta_minus () {
 	return res;
 }
 
+// part of eq. (16 and 17). It corresponds to individual summands: first index - initial polarisation, second index - plus or minus
+double photon::Sf (int ind1, int ind2) {
+
+	double mu_v;
+	double beta_k;
+	double res;
+
+	if ((ind1 < 0) || (ind1 > 2)) {
+		cout << "Index i in function Sf is wrong "<<ind1 << endl;
+		exit(2);
+	}
+	if ((ind2 < 0) || (ind2 > 2)) {
+		cout << "Index j in function Sf is wrong "<<ind2 << endl;
+		exit(2);
+	}
+
+	mu_v = get_mu();
+
+
+	if (ind1 == 1) {
+		if (ind2 == 1) {
+			beta_k = beta_plus();
+			res = abs(mu_v - beta_k) / (1.0 - mu_v * beta_k) * mg->f_beta  (beta_k);
+		}
+		if (ind2 == 2) {
+			beta_k = beta_minus();
+			res = abs(mu_v - beta_k) / (1.0 - mu_v * beta_k) * mg->f_beta  (beta_k);
+		}
+	}
+	if (ind1 == 2) {
+		if (ind2 == 1){
+			beta_k = beta_plus();
+			res = (1.0 - mu_v * beta_k) / abs(mu_v - beta_k) * mg->f_beta  (beta_k);
+		}
+		if (ind2 == 2){
+			beta_k = beta_minus();
+			res = (1.0 - mu_v * beta_k) / abs(mu_v - beta_k) * mg->f_beta  (beta_k);
+		}
+	}
+	
+
+return res;
+}
+
 double photon::propagate_one_step (double delta_t) {
 
 	double k_new[3];
@@ -358,10 +403,13 @@ double photon::propagate_one_step (double delta_t) {
 	if ((beta_plus_v != -20) && (beta_minus_v != -20)) {
 
 		if (s == 1) {
-			dtau = 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * ( abs(mu_v - beta_plus_v) / (1.0 - mu_v*beta_plus_v) * mg->f_beta  (beta_plus_v) + abs(mu_v - beta_minus_v) / (1.0 - mu_v*beta_minus_v) * mg->f_beta  (beta_minus_v) * c * delta_t  );
+//			dtau = 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * ( abs(mu_v - beta_plus_v) / (1.0 - mu_v*beta_plus_v) * mg->f_beta  (beta_plus_v) + abs(mu_v - beta_minus_v) / (1.0 - mu_v*beta_minus_v) * mg->f_beta  (beta_minus_v) * c * delta_t  );
+
+			dtau = c*delta_t * 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * ( Sf (1,1) + Sf (1,2) );
+
 		}
 		else if (s == 2) {
-			dtau = 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * ( 1.0 / abs(mu_v - beta_plus_v) * (1.0 - mu_v*beta_plus_v) * mg->f_beta  (beta_plus_v) + 1.0/abs(mu_v - beta_minus_v) * (1.0 - mu_v*beta_minus_v) * mg->f_beta  (beta_minus_v) * c * delta_t );
+			dtau = c*delta_t * 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * ( Sf (2,1) + Sf (2,2) );
 		}
 
 	}
@@ -387,6 +435,7 @@ int photon::scatter () {
 
 	double u1, u2, u3, u4;
 	double phi_new, theta_new, s_new;
+	double beta_plus_v, beta_minus_v;
 
 	u1 = uniform (0.0, 1.0);
 	u2 = uniform (0.0, 1.0);
@@ -409,6 +458,10 @@ int photon::scatter () {
 	}
 
 	phi_new = 2.0 * M_PI * u3;
+
+	beta_plus_v  = beta_plus();
+	beta_minus_v = beta_minus();
+
 
 	cout << "Scattering" << endl;
 
