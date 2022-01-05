@@ -619,63 +619,26 @@ int photon::propagate () {
 
 int main () {
 
-	//double dr, dtheta, dphi, dt;
 	photon * pht1;
 	bool success;
+	double phi_surf, theta_surf;
+	double T_surf;
+	int N_phot;
+
+	T_surf = 2e6;
+
+	N_phot = 1000;
 
 	magnetosphere mg (1e14, 0.1, 348135750.1848, 1.e6);
 
-	//cout << "Our original p = "<<mg.get_p() <<endl;;
-
-	//photon pht (M_PI/2.0, 0.0, 1.e6, 1.0, mg);
-	//cout << "Polarisation state: " << pht.get_polarisation_state() << endl;
-	//cout << "Beaming parameter: "<<   pht.get_beaming_parameter () << endl;
-
-	//dt = 1e-3;
-
-	//pht.print_pos();
-	//pht.print_k ();
-
-	//dr     = - pht.r();
-	//dtheta = - pht.theta();
-	//dphi   = - pht.phi ();
-
-	//pht.propagate_one_step(dt);
-	//pht.print_pos();
-
-	//dr     += pht.r();
-	//dtheta += pht.theta();
-	//dphi   += pht.phi();
-
-	//cout << "kr = " << dr / dt << " ktheta = " << dtheta / dt << " kphi = " << dphi / dt << endl;
-
-	//pht.print_k();
-
-	//cout << "First step propagation: "<<pht.propagate_one_step(dt) << endl;
-
-	//cout << mg.get_p()<<endl;
-
-	//pht.propagate();
-
-
-
-
-
-	//pht.propagate_one_step(dt);
-	//pht.print_pos();
-	//pht.propagate_one_step(dt);
-	//pht.print_pos();
-	//pht.propagate_one_step(dt);
-	//pht.print_pos();
-	//pht.propagate_one_step(dt);
-	//pht.print_pos();
-
-	//cout << "Is it inside NS? "<< pht.is_inside_ns() << endl;
-
 	ofstream ofile ("photon_list.txt");
 
-	for (int i = 0; i < 100; i++) {
-		pht1 = new photon (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
+	for (int i = 0; i < N_phot; i++) {
+
+		phi_surf   = 2.0 * M_PI * uniform(0.0, 1.0);
+		theta_surf = acos(1 - 2 * uniform(0.0, 1.0)); 
+
+		pht1 = new photon (theta_surf, phi_surf, T_surf, 1.0, mg);
 		success = pht1->propagate();
 
 		cout <<i<<"\t"<<success<<endl;
@@ -683,24 +646,7 @@ int main () {
 		if (success)
 			ofile << pht1->theta() <<"\t"<<pht1->phi() <<"\t"<<pht1->get_E_keV()<<endl;
 
-//		pht1->propagate_one_step(dt);
-//		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() << endl;
-//		delete pht1;
 	}
 	ofile.close();
-
-
-	//mg.normalise_f_beta ();
-	//mg.normalise_f_beta ();
-
-
-
-	//cout << "mu: " <<                 pht.get_mu () << endl; 
-	//cout << "omega: " <<              pht.get_omega () << endl;
-
-
-
-
-
 
 }
