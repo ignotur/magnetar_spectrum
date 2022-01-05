@@ -90,6 +90,7 @@ class photon {
 		bool   is_inside_ns           () {if (pos_r[0] < mg->get_Rns()) return true; else return false;};
 		double dist_from_ns_center    () {return pos_r[0];};
 		double Sf                     (int, int);
+		void   update_kr              ();
 };
 
 photon::photon (double theta, double phi, double T, double beaming, magnetosphere mag_NS) {
@@ -272,7 +273,12 @@ double photon::get_mu () {
 	res = res / module_kr / module_B;
 
 	//cout << "Intermediate steps of mu calculations: vec B = "<<B_inst[0]<<" "<<B_inst[1]<<" "<<B_inst[2]<<"\t vec kr = "<<kr[0]<<" "<<kr[1]<<" "<<kr[2]<<endl;
-
+  
+	//cout << "Inside get_mu"<<endl;
+	//cout << "Standard calculations: "<<res<<endl;
+	//cout << "Carthesian calculations: "<<(k[0]*mg->Bx(pos_r[0], pos_r[1], pos_r[2]) + k[1]*mg->By(pos_r[0], pos_r[1], pos_r[2]) + k[2]*mg->Bz(pos_r[0], pos_r[1], pos_r[2])) / mg->B(pos_r[0], pos_r[1]) / sqrt(k[0]*k[0] + k[1]*k[1]+k[2]*k[2])<<endl;
+	//cout << "Module B = "<<mg->B(pos_r[0], pos_r[1]) <<"\t alternatively "<<module_B<<endl;
+	//cout << "Module k = "<<sqrt(k[0]*k[0] + k[1]*k[1]+k[2]*k[2]) << "\t alternatively "<<module_kr<<endl;
 
 	return res;
 }
@@ -433,6 +439,23 @@ double photon::propagate_one_step (double delta_t) {
 
 }
 
+void photon::update_kr() {
+	double theta1, phi1;
+
+	theta1 = pos_r[1];
+	phi1   = pos_r[2];
+
+	kr[0] =  k[0] * sin(theta1) * cos(phi1) + k[1] * sin(theta1) * sin(phi1)  + k[2] * cos(theta1);
+	kr[1] =  k[0] * cos(theta1) * cos(phi1) + k[1] * cos(theta1) * sin(phi1)  - k[2] * sin(theta1);
+	kr[2] = -k[0] * sin(phi1)               + k[1] * cos(phi1);
+
+	//cout << "mod k = "<<sqrt(k[0]*k[0] + k[1]*k[1]+k[2]*k[2]) << " mod k2 = "<<sqrt(kr[0]*kr[0]+kr[1]*kr[1]+kr[2]*kr[2])<<endl;
+
+	//exit(2);
+
+
+}
+
 // Scattering event - photon gets new polarisation, frequency and k-vector
 int photon::scatter () {
 
@@ -526,7 +549,19 @@ int photon::scatter () {
 
 	cout << "Scattering" << endl;
 
-	//exit(0);
+	k[0] = k_new[0];
+	k[1] = k_new[1];
+	k[2] = k_new[2];
+
+	update_kr();
+
+	omega = omega_new;
+
+	s = s_new;
+
+	cout << "Check if our update of mu makes sence - mu_new = "<<new_mu << " compute mu = "<<get_mu()<<endl;
+	cout << "Directly compute mu = "<<(Bx*k_new[0] + By*k_new[1] + Bz*k_new[2]) / c <<endl;
+	exit(0);
 
 	return 0;
 }
