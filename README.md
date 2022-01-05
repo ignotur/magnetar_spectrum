@@ -1,7 +1,7 @@
-Magpie code 
+Magpies code 
 ====
 
-MAGnetar polarisation and spectroscopy code
+MAGnetar Polarisation and Spectroscopy code
 
 
 ## Compilation
