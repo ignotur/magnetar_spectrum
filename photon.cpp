@@ -440,12 +440,17 @@ int photon::scatter () {
 	double phi_new, theta_new, s_new, new_mu;
 	double beta_plus_v, beta_minus_v;
 	double beta_val;
+	double Bx, By, Bz;
+	double mu_k, mu_b, mu_val;
+	double k_new [3];
+	double alpha11;
+	double omega_new;
 
 	u1 = uniform (0.0, 1.0);
 	u2 = uniform (0.0, 1.0);
 	u3 = uniform (0.0, 1.0);
 	u4 = uniform (0.0, 1.0);
-
+ 
 	if ((s == 1) && (u1 > 0.25))
 		s_new = 2;
 	if ((s == 2) && (u1 > 0.75))
@@ -463,6 +468,7 @@ int photon::scatter () {
 
 	phi_new = 2.0 * M_PI * u3;
 
+	mu_val = get_mu ();
 	beta_plus_v  = beta_plus();
 	beta_minus_v = beta_minus();
 
@@ -477,12 +483,50 @@ int photon::scatter () {
 
 	new_mu = (theta_new + beta_val) / (1.0 + beta_val * theta_new);
 
-
+	Bx = mg->Bx (pos_r[0], pos_r[1], pos_r[2]) / mg->B (pos_r[0], pos_r[1]); // Direction of the magnetic field
+	By = mg->By (pos_r[0], pos_r[1], pos_r[2]) / mg->B (pos_r[0], pos_r[1]);
+	Bz = mg->Bz (pos_r[0], pos_r[1], pos_r[2]) / mg->B (pos_r[0], pos_r[1]);
 	
+	if (abs(sqrt(Bx*Bx+By*By + Bz*Bz)-1.0) > 1e-3) {
+		cout << "Something strange has happened with magnetic field transformation" <<endl;
+		exit(2);
+	}
 
 
+	mu_b = Bz;
+
+	mu_k = mu_b*new_mu + sqrt((1.0 - mu_b*mu_b)*(1.0-new_mu*new_mu)) * cos(phi_new);
+
+	k_new[2] = mu_k;
+
+	alpha11 = sqrt((1.0-mu_b*mu_b)*(1.0 - new_mu*new_mu)) * sin(phi_new);
+
+	k_new[1] = (new_mu - k_new[2] * Bz - alpha11 * Bx/By ) / (By + Bx*Bx / By);
+
+	k_new[0] = (alpha11 + k_new[1] * Bx) / By;
+
+	//cout << "Check for new k_new; |k_new| = "<<sqrt(k_new[0]*k_new[0] + k_new[1]*k_new[1]+ k_new[2]*k_new[2]) <<endl;
+	//
+	if (abs(sqrt(k_new[0]*k_new[0] + k_new[1]*k_new[1]+ k_new[2]*k_new[2]) - 1.0) > 1e-3) {
+		cout << "Something is strange with new k_new at the scattering" <<endl;
+		exit(3);
+	}
+
+	k_new[0] *= c;
+	k_new[1] *= c;
+	k_new[2] *= c;
+
+
+	cout << "Before the scattering: k = "<<k[0]<<" "<<k[1]<<" "<<k[2]<<" k_new = "<<k_new[0]<<" "<<k_new[1] <<" "<<k_new[2]<<endl;
+
+
+	omega_new = pow(1.0 / (1.0 - beta_val*beta_val), 2.0) * omega * (1.0 - beta_val * mu_val) * (1.0 + beta_val * new_mu);
+
+	cout << "Omega before scattering "<< omega << " after "<<omega_new <<endl;
 
 	cout << "Scattering" << endl;
+
+	exit(0);
 
 	return 0;
 }
