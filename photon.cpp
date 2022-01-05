@@ -368,14 +368,15 @@ double photon::propagate_one_step (double delta_t) {
 	else 
 		dtau = 0.0;
   	
-        cout <<"pos = "<<pos_r[0]<<"\t"<< pos_r[1] <<" in respect to NS radius = "<<pos_r[0] / mg->get_Rns() <<endl;
-	cout <<"Bphi = "<<mg->Bphi (pos_r[0], pos_r[1]) << "\t Btheta = "<< mg->Btheta(pos_r[0], pos_r[1]) <<endl;
-	cout <<"What is p? = "<<mg->get_p() <<endl;
-        cout <<"Magnetospheric properties: "<<mg->ne (pos_r[0], pos_r[1]) << endl;
-	cout <<"Comparison of optical depths: "<< 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * c * delta_t << "\t" << dtau << endl;
-	cout <<"Remaining factors are: f(beta_k) = "<< mg->f_beta  (beta_minus_v) <<"\t" << mg->f_beta  (beta_plus_v) <<endl;
-	cout <<"mu_v - beta_plus_v = "<<abs(mu_v - beta_plus_v) << endl;
-	cout <<"mu_v = "<<mu_v << endl;
+        //cout <<"pos = "<<pos_r[0]<<"\t"<< pos_r[1] <<" in respect to NS radius = "<<pos_r[0] / mg->get_Rns() <<endl;
+	//cout <<"Bphi = "<<mg->Bphi (pos_r[0], pos_r[1]) << "\t Btheta = "<< mg->Btheta(pos_r[0], pos_r[1]) <<endl;
+	//cout <<"What is p? = "<<mg->get_p() <<endl;
+        //cout <<"Magnetospheric properties: "<<mg->ne (pos_r[0], pos_r[1]) << endl;
+	//cout <<"Comparison of optical depths: "<< 2.0*M_PI*M_PI*re*c*mg->ne (pos_r[0], pos_r[1]) *omega_B / (omega*omega) * c * delta_t << "\t" << dtau << endl;
+	//cout <<"Remaining factors are: f(beta_k) = "<< mg->f_beta  (beta_minus_v) <<"\t" << mg->f_beta  (beta_plus_v) <<endl;
+	//cout <<"mu_v - beta_plus_v = "<<abs(mu_v - beta_plus_v) << endl;
+	//cout <<"mu_v = "<<mu_v << endl;
+	cout <<"Distance from NS = "<<pos_r[0]/1e6 <<" mu_v = "<<mu_v<<"\t k0*delta_t = "<<k[0]*delta_t/1e6<<endl;
 
 	return dtau;
 
@@ -447,11 +448,11 @@ int main () {
 	double dr, dtheta, dphi, dt;
 	photon * pht1;
 
-	magnetosphere mg (1e14, 0.1, 348135750.1848, 1e6);
+	magnetosphere mg (1e14, 0.1, 348135750.1848, 1.e6);
 
 	cout << "Our original p = "<<mg.get_p() <<endl;;
 
-	photon pht (M_PI/2.0, 0.0, 1.0e6, 1.0, mg);
+	photon pht (M_PI/2.0, 0.0, 1.e6, 1.0, mg);
 	cout << "Polarisation state: " << pht.get_polarisation_state() << endl;
 	cout << "Beaming parameter: "<<   pht.get_beaming_parameter () << endl;
 
@@ -464,18 +465,18 @@ int main () {
 	dtheta = - pht.theta();
 	dphi   = - pht.phi ();
 
-	pht.propagate_one_step(dt);
-	pht.print_pos();
+	//pht.propagate_one_step(dt);
+	//pht.print_pos();
 
-	dr     += pht.r();
-	dtheta += pht.theta();
-	dphi   += pht.phi();
+	//dr     += pht.r();
+	//dtheta += pht.theta();
+	//dphi   += pht.phi();
 
-	cout << "kr = " << dr / dt << " ktheta = " << dtheta / dt << " kphi = " << dphi / dt << endl;
+	//cout << "kr = " << dr / dt << " ktheta = " << dtheta / dt << " kphi = " << dphi / dt << endl;
 
-	pht.print_k();
+	//pht.print_k();
 
-	cout << "First step propagation: "<<pht.propagate_one_step(dt) << endl;
+	//cout << "First step propagation: "<<pht.propagate_one_step(dt) << endl;
 
 	cout << mg.get_p()<<endl;
 
