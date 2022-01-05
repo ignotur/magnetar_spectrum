@@ -526,7 +526,7 @@ int photon::scatter () {
 
 	cout << "Scattering" << endl;
 
-	exit(0);
+	//exit(0);
 
 	return 0;
 }

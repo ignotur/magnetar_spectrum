@@ -1,5 +1,7 @@
-Code to model X-ray spectra of magnetar
+Magpie code 
 ====
+
+MAGnetar polarisation and spectroscopy code
 
 
 ## Compilation
