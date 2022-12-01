@@ -1,7 +1,9 @@
 Magpies code 
 ====
 
-MAGnetar Polarisation, Intensity and Spectroscopy code
+MAGnetar Polarisation, Intensity and Spectroscopy code.
+
+This code will generate synthetic X-ray lightcurves, spectra, phased-resolved spectrocopy plots and polarisation plots for given configuration of magnetosphere and surface thermal maps for neutron stars. Photons are scattered in magnetosphere due to the inverse Compton scattering and their trajectories are solved using the Monte Carlo techniques.
 
 
 ## Compilation
