@@ -69,7 +69,7 @@ class photon {
 
 	public:
 		photon (double theta, double phi, double T, double beaming, magnetosphere); // Constructor which corresponds to emission of the photon from the NS surface path with coordinates phi, theta and temperature T
-		int    propagate ();
+		int    propagate (bool); // propagate all the way from NS atmosphere to the last scattering, flag is to print photon history for debugging
 		double propagate_one_step (double delta_t); // Method to propagate photon one numerical timestep. It returns back the optical depth
 		int    scatter ();            // Method to scatter the photon, i.e. it updates omega and k 
 		int    get_polarisation_state () {return s;};
@@ -569,7 +569,7 @@ int photon::scatter () {
 
 
 // In this function we integrate the photon motion
-int photon::propagate () {
+int photon::propagate (bool verbose) {
 
 	double u, tau, dt;
 	int cnt;
@@ -581,6 +581,11 @@ int photon::propagate () {
 	tau = 0.0;
 	dt = 1e-5; // i.e. distance of ~3 km 
 	success = true;
+
+
+	 
+	ofstream ofile ("photon_history.txt");
+
 	while (true) { 
 
 		tau += propagate_one_step (dt);
@@ -609,6 +614,8 @@ int photon::propagate () {
 		}
 
 		//cout << cnt <<"\t" << tau <<endl;
+		if (verbose)
+			ofile << cnt << "\t" <<x() << "\t" << y() << "\t" << z() << endl;
 
 	}
 
@@ -627,11 +634,12 @@ int main () {
 
 	T_surf = 2e6;
 
-	N_phot = 1000;
+	N_phot = 100;
 
 	magnetosphere mg (1e14, 0.1, 348135750.1848, 1.e6);
 
 	ofstream ofile ("photon_list.txt");
+	//ofstream oinit ('')
 
 	for (int i = 0; i < N_phot; i++) {
 
@@ -639,7 +647,7 @@ int main () {
 		theta_surf = acos(1 - 2 * uniform(0.0, 1.0)); 
 
 		pht1 = new photon (theta_surf, phi_surf, T_surf, 1.0, mg);
-		success = pht1->propagate();
+		success = pht1->propagate(true);
 
 		cout <<i<<"\t"<<success<<endl;
 
