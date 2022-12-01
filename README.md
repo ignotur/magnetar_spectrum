@@ -5,6 +5,10 @@ MAGnetar Polarisation, Intensity and Spectroscopy code.
 
 This code will generate synthetic X-ray lightcurves, spectra, phased-resolved spectrocopy plots and polarisation plots for given configuration of magnetosphere and surface thermal maps for neutron stars. Photons are scattered in magnetosphere due to the inverse Compton scattering and their trajectories are solved using the Monte Carlo techniques.
 
+## Work in progress
+
+The code development is in progress and current version of the code does not have the full functionality.
+
 
 ## Compilation
 

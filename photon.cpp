@@ -631,10 +631,11 @@ int main () {
 	double phi_surf, theta_surf;
 	double T_surf;
 	int N_phot;
+	double E_init;
 
 	T_surf = 2e6;
 
-	N_phot = 100;
+	N_phot = 1000;
 
 	magnetosphere mg (1e14, 0.1, 348135750.1848, 1.e6);
 
@@ -647,12 +648,16 @@ int main () {
 		theta_surf = acos(1 - 2 * uniform(0.0, 1.0)); 
 
 		pht1 = new photon (theta_surf, phi_surf, T_surf, 1.0, mg);
-		success = pht1->propagate(true);
 
-		cout <<i<<"\t"<<success<<endl;
+		E_init = pht1->get_E_keV();
+
+		success = pht1->propagate(false);
+
+		if ((i%100) == 0) 
+			cout <<i<<endl;
 
 		if (success)
-			ofile << pht1->theta() <<"\t"<<pht1->phi() <<"\t"<<pht1->get_E_keV()<<endl;
+			ofile << pht1->theta() <<"\t"<<pht1->phi() <<"\t"<<E_init<<"\t"<<pht1->get_E_keV()<<endl;
 
 	}
 	ofile.close();
