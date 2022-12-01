@@ -45,7 +45,7 @@ python3 plot_spectra.py
 ```
 Should produce the spectra as the following.
 
-![Initial and final X-ray spectrum](https://github.com/ignotur/magnetar_spectrum/blob/main/spec.pdf)
+![Initial and final X-ray spectrum](https://github.com/ignotur/magnetar_spectrum/blob/main/spec.jpg)
 
 ## References
 
