@@ -54,13 +54,15 @@ class magnetosphere {
 class photon {
 	private:
 		double b;         // Beaming parameter
-		double omega;     // Photon frequency 
-		int s;            // Photon polarisation state: 0 - photon does not exist; 1 - ordinary mode; 2 - extraordinary mode
+		double omega_em;   // Emission frequency
+		double omega;     // Instantenious photon frequency 
+		int s;            // Instantenious Photon polarisation state: 0 - photon does not exist; 1 - ordinary mode; 2 - extraordinary mode
 		double mu;        // Cosine of the angle between the initial photon direction and magnetic field
 		double azimuth;   // Azimuth angle for photon
+		double pos_em[3];  // Emission position
 		double pos [3];   // Instantenious location of photon in the Carthesian coordinate system [x,y,z]
 		double pos_r [3]; // Instantenious location of photon in the spherical coordinate system [r,theta,phi]
-		double k [3];     // Instantenious k vector for the photon in the Carthesian coordinate system [kx, ky, kz]
+		double k [3];     // Instantenious k vector for the photon in the Carthesian coordinate system [kx, ky, kz] - this is a unit vector in direction of the photon propagation
 		double kr[3];     // Instantenious k vector for the photon in the spherical coordinate system [kr, ktheta, kphi]
 		double c;         // Speed of light
 		double re;        // Classical electron radius
@@ -85,6 +87,9 @@ class photon {
 		double x                      () {return pos[0];};
 		double y                      () {return pos[1];};
 		double z                      () {return pos[2];};
+		double kx                     () {return k[0];};
+		double ky                     () {return k[1];};
+		double kz                     () {return k[2];};
 		void   print_pos              () {cout << "x = "<<pos[0]<<" y = "<<pos[1] <<" z = "<<pos[2] << "; r = "<<pos_r[0]<<" theta = "<<pos_r[1] << " phi = "<<pos_r[2] <<endl; };
 		void   print_k                () {cout << "kx = "<<k[0]<<" ky = "<<k[1] <<" kz = "<<k[2]    << "; kr = " <<kr[0] << " k_theta = "<<kr[1] << " k_phi = "<<kr[2] << endl;}
 		bool   is_inside_ns           () {if (pos_r[0] < mg->get_Rns()) return true; else return false;};
@@ -123,24 +128,35 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 
 	mg = &mag_NS;
 
-	pos[0] = mag_NS.get_Rns() * sin (theta) * cos (phi); // Theta is computed from the pole down
-	pos[1] = mag_NS.get_Rns() * sin (theta) * sin (phi);
-	pos[2] = mag_NS.get_Rns() * cos (theta);
+	pos_em[0] = mag_NS.get_Rns() * sin (theta) * cos (phi); // Theta is computed from the pole down
+	pos_em[1] = mag_NS.get_Rns() * sin (theta) * sin (phi);
+	pos_em[2] = mag_NS.get_Rns() * cos (theta);
+
+	pos[0] = pos_em[0];
+	pos[1] = pos_em[1];
+	pos[2] = pos_em[2];
+
 
 	pos_r[0] = mag_NS.get_Rns();
 	pos_r[1] = theta;
 	pos_r[2] = phi;
 
-	kr[0] = c;
-	kr[1] = acos(mu);
-	kr[2] = azimuth;
+	//kr[0] = c;
+	//kr[1] = acos(mu);
+	//kr[2] = azimuth;
 
 	theta0 = acos(mu);
 	phi0   = azimuth;
 
-	k[0] = c * sin(theta) * cos(phi) + mag_NS.get_Rns() * cos(theta) * theta0 * cos (phi) - mag_NS.get_Rns() * sin(theta) * sin(phi) * phi0;
-	k[1] = c * sin(theta) * sin(phi) + mag_NS.get_Rns() * cos(theta) * theta0 * sin (phi) + mag_NS.get_Rns() * sin(theta) * cos(phi) * phi0;
-	k[2] = c * cos(theta)            - mag_NS.get_Rns() * sin(theta) * theta0; 
+	//k[0] = c * sin(theta) * cos(phi) + mag_NS.get_Rns() * cos(theta) * theta0 * cos (phi) - mag_NS.get_Rns() * sin(theta) * sin(phi) * phi0;
+	//k[1] = c * sin(theta) * sin(phi) + mag_NS.get_Rns() * cos(theta) * theta0 * sin (phi) + mag_NS.get_Rns() * sin(theta) * cos(phi) * phi0;
+	//k[2] = c * cos(theta)            - mag_NS.get_Rns() * sin(theta) * theta0; 
+	//
+	
+	
+	k[0] = sin(phi)*sin(phi0)*sin(theta0)*cos(theta) + sin(theta) *cos(theta0) + sin(theta0) *cos(phi) * cos(phi0) *cos(theta);
+	k[1] = -sin(phi) *sin(theta0) *cos(phi0) + sin(phi0) *sin(theta0) * cos(phi);
+	k[2] = -sin(phi) *sin(phi0) *sin(theta) * sin(theta0) - sin(theta) *sin(theta0)*cos(phi)*cos(phi0) +cos(theta) *cos(theta0);
 
 	//cout << "Be careful, position and k vector might not be right at the moment" << endl;
 	//
@@ -615,7 +631,7 @@ int photon::propagate (bool verbose) {
 
 		//cout << cnt <<"\t" << tau <<endl;
 		if (verbose)
-			ofile << cnt << "\t" <<x() << "\t" << y() << "\t" << z() << endl;
+			ofile << cnt << "\t" <<x() / 1e6 << "\t" << y() / 1e6 << "\t" << z() / 1e6 << endl; // print current photon location in units of Rns
 
 	}
 
@@ -635,7 +651,7 @@ int main () {
 
 	T_surf = 2e6;
 
-	N_phot = 1000;
+	N_phot = 10;
 
 	magnetosphere mg (1e14, 0.1, 348135750.1848, 1.e6);
 
@@ -651,7 +667,9 @@ int main () {
 
 		E_init = pht1->get_E_keV();
 
-		success = pht1->propagate(false);
+		success = pht1->propagate(true);
+
+		cout << "Check if |k|==1: "<<pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0) << endl; 
 
 		if ((i%100) == 0) 
 			cout <<i<<endl;
