@@ -1,4 +1,11 @@
-all: photon.cpp monte_carlo.cpp mathematics.cpp planck.cpp 
-		g++ -O3 photon.cpp monte_carlo.cpp mathematics.cpp planck.cpp -o magpies.out
+
+CC = g++
+TARGET = magpies.out
+LLIST = photon.o monte_carlo.o mathematics.o planck.o
+
+all: $(LLIST)
+		$(CC) -O3 $? -o $(TARGET)
+%.o: %.cpp
+		g++ -c $< -o $@ 
 clean:
 		rm *.exe *.o *.out
