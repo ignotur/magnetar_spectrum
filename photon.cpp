@@ -390,15 +390,21 @@ double photon::propagate_one_step (double delta_t) {
 	double beta_plus_v, beta_minus_v;
 	double omega_B;
 	double dtau;
-	double mu_v;
+	double mu_v, c;
 
-	pos_new[0] = pos[0] + k[0] * delta_t;
-	pos_new[1] = pos[1] + k[1] * delta_t;
-	pos_new[2] = pos[2] + k[2] * delta_t;
+	c  = 2.99792458e10; // cm/s
+
+	pos_new[0] = pos[0] + k[0] * delta_t * c;
+	pos_new[1] = pos[1] + k[1] * delta_t * c;
+	pos_new[2] = pos[2] + k[2] * delta_t * c;
+
+	cout << "New pos: "<< pos_new[0] / 1e6 <<"\t" << pos_new[1] / 1e6 << "\t" << pos_new[2] / 1e6 << endl;  
 
 	r_new     = sqrt(pos_new[0]* pos_new[0] + pos_new[1]*pos_new[1] + pos_new[2]*pos_new[2]);
 	theta_new = atan2 (sqrt(pos_new[0]*pos_new[0] + pos_new[1]*pos_new[1])/r_new, pos_new[2] / r_new );
 	phi_new   = atan2 (pos_new[1], pos_new[0]);
+
+	cout << "New r: "<< r_new  <<endl;
 
 	k_r_new[0] = (pos_new[0] * k[0] + pos_new[1] * k[1] + pos_new[2] * k[2]) / r_new;
 	k_r_new[1] = (k_r_new[0] * cos(theta_new) - k[2]) / (r_new * sin(theta_new));
@@ -651,12 +657,13 @@ int main () {
 
 	T_surf = 2e6;
 
-	N_phot = 10;
+	N_phot = 1;
 
 	magnetosphere mg (1e14, 0.1, 348135750.1848, 1.e6);
 
 	ofstream ofile ("photon_list.txt");
 	//ofstream oinit ('')
+	//
 
 	for (int i = 0; i < N_phot; i++) {
 
@@ -667,15 +674,19 @@ int main () {
 
 		E_init = pht1->get_E_keV();
 
-		success = pht1->propagate(true);
-
+		cout << "Test" << endl;
 		cout << "Check if |k|==1: "<<pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0) << endl; 
+
+		success = pht1->propagate(false);
+
 
 		if ((i%100) == 0) 
 			cout <<i<<endl;
 
 		if (success)
 			ofile << pht1->theta() <<"\t"<<pht1->phi() <<"\t"<<E_init<<"\t"<<pht1->get_E_keV()<<endl;
+
+		delete pht1;
 
 	}
 	ofile.close();
