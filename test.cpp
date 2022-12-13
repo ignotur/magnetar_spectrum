@@ -47,14 +47,14 @@ int main () {
 	cout << "* Succes" << endl;
 
 
-	pht1->get_mu();
+	cout << "mu is: " << pht1->get_mu() << endl;
 
 
         ofstream ofile ("propagation_test.txt");
 
 	dt = 1e-5;
 
-	for (int i=0; i < 1000; i++) {
+	for (int i=0; i < 1; i++) {
 
 		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() <<"\t" << pht1->r() << "\t" <<  pht1->theta() << "\t" <<  pht1->phi() << endl;
 		pht1->propagate_one_step (dt);
