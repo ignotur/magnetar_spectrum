@@ -57,7 +57,7 @@ class photon {
                 magnetosphere *mg;// Object of the twisted magnetosphere class. Physically the magnetosphere through which the photon propagates
 
         public:
-                photon (double theta, double phi, double T, double beaming, magnetosphere); // Constructor which corresponds to emission of the photon from the NS surface path with coordinates phi, theta and temperature T
+                photon (double theta, double phi, double T, double beaming, magnetosphere *); // Constructor which corresponds to emission of the photon from the NS surface path with coordinates phi, theta and temperature T
                 int    propagate (bool); // propagate all the way from NS atmosphere to the last scattering, flag is to print photon history for debugging
                 double propagate_one_step (double delta_t); // Method to propagate photon one numerical timestep. It returns back the optical depth
                 int    scatter ();            // Method to scatter the photon, i.e. it updates omega and k

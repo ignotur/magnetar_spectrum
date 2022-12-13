@@ -15,7 +15,7 @@ using namespace std;
 // Written by Dr. Andrei P. Igoshev ignotur@gmail.com
 
 
-photon::photon (double theta, double phi, double T, double beaming, magnetosphere mag_NS) {
+photon::photon (double theta, double phi, double T, double beaming, magnetosphere *mag_NS) {
 
 	double theta0, phi0;
 
@@ -42,18 +42,18 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 
 	max_number_of_propagation_steps = 5000;
 
-	mg = &mag_NS;
+	mg = mag_NS;
 
-	pos_em[0] = mag_NS.get_Rns() * sin (theta) * cos (phi); // Theta is computed from the pole down
-	pos_em[1] = mag_NS.get_Rns() * sin (theta) * sin (phi);
-	pos_em[2] = mag_NS.get_Rns() * cos (theta);
+	pos_em[0] = mag_NS->get_Rns() * sin (theta) * cos (phi); // Theta is computed from the pole down
+	pos_em[1] = mag_NS->get_Rns() * sin (theta) * sin (phi);
+	pos_em[2] = mag_NS->get_Rns() * cos (theta);
 
 	pos[0] = pos_em[0];
 	pos[1] = pos_em[1];
 	pos[2] = pos_em[2];
 
 
-	pos_r[0] = mag_NS.get_Rns();
+	pos_r[0] = mag_NS->get_Rns();
 	pos_r[1] = theta;
 	pos_r[2] = phi;
 
@@ -205,13 +205,16 @@ double photon::get_mu () {
 
 	res = res / module_kr / module_B;
 
-	//cout << "Intermediate steps of mu calculations: vec B = "<<B_inst[0]<<" "<<B_inst[1]<<" "<<B_inst[2]<<"\t vec kr = "<<kr[0]<<" "<<kr[1]<<" "<<kr[2]<<endl;
+	cout << "Intermediate steps of mu calculations: vec B = "<<B_inst[0]<<" "<<B_inst[1]<<" "<<B_inst[2]<<"\t vec kr = "<<kr[0]<<" "<<kr[1]<<" "<<kr[2]<<endl;
+	cout << "Photon position: "<<pos_r[0] << "\t" << pos_r[1] << "\t" << pos_r[2] << endl;
+	cout << "Magnetic field (Carthesian) "<< mg->Bx(pos_r[0], pos_r[1], 0) << endl;
+	cout << "Check if class is initialised correctly: "<< mg->get_Rns ()<<endl;
   
-	//cout << "Inside get_mu"<<endl;
-	//cout << "Standard calculations: "<<res<<endl;
-	//cout << "Carthesian calculations: "<<(k[0]*mg->Bx(pos_r[0], pos_r[1], pos_r[2]) + k[1]*mg->By(pos_r[0], pos_r[1], pos_r[2]) + k[2]*mg->Bz(pos_r[0], pos_r[1], pos_r[2])) / mg->B(pos_r[0], pos_r[1]) / sqrt(k[0]*k[0] + k[1]*k[1]+k[2]*k[2])<<endl;
-	//cout << "Module B = "<<mg->B(pos_r[0], pos_r[1]) <<"\t alternatively "<<module_B<<endl;
-	//cout << "Module k = "<<sqrt(k[0]*k[0] + k[1]*k[1]+k[2]*k[2]) << "\t alternatively "<<module_kr<<endl;
+	cout << "Inside get_mu"<<endl;
+	cout << "Standard calculations: "<<res<<endl;
+	cout << "Carthesian calculations: "<<(k[0]*mg->Bx(pos_r[0], pos_r[1], pos_r[2]) + k[1]*mg->By(pos_r[0], pos_r[1], pos_r[2]) + k[2]*mg->Bz(pos_r[0], pos_r[1], pos_r[2])) / mg->B(pos_r[0], pos_r[1]) / sqrt(k[0]*k[0] + k[1]*k[1]+k[2]*k[2])<<endl;
+	cout << "Module B = "<<mg->B(pos_r[0], pos_r[1]) <<"\t alternatively "<<module_B<<endl;
+	cout << "Module k = "<<sqrt(k[0]*k[0] + k[1]*k[1]+k[2]*k[2]) << "\t alternatively "<<module_kr<<endl;
 
 	return res;
 }
@@ -317,7 +320,7 @@ double photon::propagate_one_step (double delta_t) {
 	cout << "New pos: "<< pos_new[0] / 1e6 <<"\t" << pos_new[1] / 1e6 << "\t" << pos_new[2] / 1e6 << endl;  
 
 	r_new     = sqrt(pos_new[0]* pos_new[0] + pos_new[1]*pos_new[1] + pos_new[2]*pos_new[2]);
-	theta_new = atan2 (sqrt(pos_new[0]*pos_new[0] + pos_new[1]*pos_new[1])/r_new, pos_new[2] / r_new );
+	theta_new = atan2 (sqrt(pos_new[0]*pos_new[0] + pos_new[1]*pos_new[1]), pos_new[2] );
 	phi_new   = atan2 (pos_new[1], pos_new[0]);
 
 	cout << "New r: "<< r_new  <<endl;
@@ -345,8 +348,12 @@ double photon::propagate_one_step (double delta_t) {
 
 	beta_plus_v  = beta_plus();
 	beta_minus_v = beta_minus();
+	cout << "Test (1)" << endl;
+
+
 	omega_B = mg->omega_B (pos_r[0], pos_r[1]);
 	mu_v = get_mu();
+
 
 	if ((beta_plus_v != -20) && (beta_minus_v != -20)) {
 

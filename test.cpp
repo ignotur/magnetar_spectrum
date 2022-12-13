@@ -17,6 +17,7 @@ int main () {
         int N_phot;
         double E_init;
 	double B, Bx, By, Bz;
+	double dt;
 
         T_surf = 2e6;
 
@@ -35,35 +36,36 @@ int main () {
 	assert (abs(B - sqrt(Bx*Bx + By*By + Bz*Bz)) < 1e-6);
 	cout << "* Succes" << endl;
 
+        phi_surf   = 2.0 * M_PI * uniform(0.0, 1.0);
+        theta_surf = acos(1 - 2 * uniform(0.0, 1.0));
+
+        pht1 = new photon (theta_surf, phi_surf, T_surf, 1.0, &mg);
+
+        cout << "* Test of |k| in the Carthesian coordinate system" << endl;
+        //cout << "Check if |k|==1: "<<pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0) << endl;
+	assert (abs(1 - (pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0))) < 1e-6 );
+	cout << "* Succes" << endl;
+
+
+	pht1->get_mu();
+
+
+        ofstream ofile ("propagation_test.txt");
+
+	dt = 1e-5;
+
+	for (int i=0; i < 1000; i++) {
+
+		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() <<"\t" << pht1->r() << "\t" <<  pht1->theta() << "\t" <<  pht1->phi() << endl;
+		pht1->propagate_one_step (dt);
+
+
+	}
 
 
 
-        ofstream ofile ("photon_list.txt");
-
-        for (int i = 0; i < N_phot; i++) {
-
-                phi_surf   = 2.0 * M_PI * uniform(0.0, 1.0);
-                theta_surf = acos(1 - 2 * uniform(0.0, 1.0));
-
-                pht1 = new photon (theta_surf, phi_surf, T_surf, 1.0, mg);
-
-                E_init = pht1->get_E_keV();
-
-                cout << "Test" << endl;
-                cout << "Check if |k|==1: "<<pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0) << endl;
-
-                success = pht1->propagate(false);
 
 
-                if ((i%100) == 0)
-                        cout <<i<<endl;
-
-                if (success)
-                        ofile << pht1->theta() <<"\t"<<pht1->phi() <<"\t"<<E_init<<"\t"<<pht1->get_E_keV()<<endl;
-
-                delete pht1;
-
-        }
         ofile.close();
 
 }
