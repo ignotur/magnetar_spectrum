@@ -345,13 +345,12 @@ double photon::propagate_one_step (double delta_t) {
 	pos_r[1] = theta_new;
 	pos_r[2] = phi_new;
 
-	kr[0] = sin(theta_new) * cos(phi_new) * k[0] + sin(theta_new) * sin(phi_new) * k[1] + cos(theta_new) * k[2];
-	kr[1] = cos(theta_new) * cos(phi_new) * k[0] + cos(theta_new) * sin(phi_new) * k[1] - sin(theta_new) * k[1];
+	kr[0] = sin(theta_new) * cos(phi_new) * k[0] + sin(theta_new) * sin(phi_new) * k[1] + cos(theta_new) * k[2]; // k is treated as a usual vector here
+	kr[1] = cos(theta_new) * cos(phi_new) * k[0] + cos(theta_new) * sin(phi_new) * k[1] - sin(theta_new) * k[2];
 	kr[2] = - sin(phi_new) * k[0] + cos(phi_new) * k[1];
 
 	beta_plus_v  = beta_plus();
 	beta_minus_v = beta_minus();
-	cout << "Test (1)" << endl;
 
 
 	omega_B = mg->omega_B (pos_r[0], pos_r[1]);

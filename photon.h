@@ -85,6 +85,9 @@ class photon {
                 double kx                     () {return k[0];};
                 double ky                     () {return k[1];};
                 double kz                     () {return k[2];};
+		double k_r                    () {return kr[0];};
+		double k_theta                () {return kr[1];};
+		double k_phi                  () {return kr[2];};
                 void   print_pos              () {cout << "x = "<<pos[0]<<" y = "<<pos[1] <<" z = "<<pos[2] << "; r = "<<pos_r[0]<<" theta = "<<pos_r[1] << " phi = "<<pos_r[2] <<endl; };
                 void   print_k                () {cout << "kx = "<<k[0]<<" ky = "<<k[1] <<" kz = "<<k[2]    << "; kr = " <<kr[0] << " k_theta = "<<kr[1] << " k_phi = "<<kr[2] << endl;}
                 bool   is_inside_ns           () {if (pos_r[0] < mg->get_Rns()) return true; else return false;};

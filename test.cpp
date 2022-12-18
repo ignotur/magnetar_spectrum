@@ -18,6 +18,7 @@ int main () {
         double E_init;
 	double B, Bx, By, Bz;
 	double dt;
+	double dtauv;
 
         T_surf = 2e6;
 
@@ -31,7 +32,7 @@ int main () {
 	Bz = mg.Bz (3e6, 1.52, 0.0);
 
 	cout << "* Test of magnetic field transformation from spherical coordinate system to the Carthesian coordinate system" << endl;
-	cout << "B = " << B <<" other B = "<< sqrt(Bx*Bx + By*By + Bz*Bz) << " diff: " << abs(B - sqrt(Bx*Bx + By*By + Bz*Bz)) <<endl;
+	//cout << "B = " << B <<" other B = "<< sqrt(Bx*Bx + By*By + Bz*Bz) << " diff: " << abs(B - sqrt(Bx*Bx + By*By + Bz*Bz)) <<endl;
 
 	assert (abs(B - sqrt(Bx*Bx + By*By + Bz*Bz)) < 1e-6);
 	cout << "* Succes" << endl;
@@ -44,6 +45,8 @@ int main () {
         cout << "* Test of |k| in the Carthesian coordinate system" << endl;
         //cout << "Check if |k|==1: "<<pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0) << endl;
 	assert (abs(1 - (pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0))) < 1e-6 );
+	assert (abs(1 - (pow(pht1->k_r(), 2.0) + pow(pht1->k_theta(), 2.0) + pow(pht1->k_phi(), 2.0))) < 1e-6 );
+
 	cout << "* Succes" << endl;
 
 
@@ -54,11 +57,18 @@ int main () {
 
 	dt = 1e-5;
 
-	for (int i=0; i < 1; i++) {
+	for (int i=0; i < 100; i++) {
 
-		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() <<"\t" << pht1->r() << "\t" <<  pht1->theta() << "\t" <<  pht1->phi() << endl;
-		pht1->propagate_one_step (dt);
+		dtauv = pht1->propagate_one_step (dt);
+		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() <<"\t" << pht1->r() << "\t" <<  pht1->theta() << "\t" <<  pht1->phi() <<"\t" <<dtauv << endl;
 
+		cout << "Step: "<<i << endl;
+
+		cout << (pow(pht1->k_r(), 2.0) + pow(pht1->k_theta(), 2.0) + pow(pht1->k_phi(), 2.0)) << endl;
+		cout << pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0) << endl;
+
+	        assert (abs(1 - (pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0))) < 1e-6 );
+       		assert (abs(1 - (pow(pht1->k_r(), 2.0) + pow(pht1->k_theta(), 2.0) + pow(pht1->k_phi(), 2.0))) < 1e-6 );
 
 	}
 
