@@ -57,7 +57,7 @@ int main () {
 
 	dt = 1e-5;
 
-	for (int i=0; i < 100; i++) {
+	for (int i=0; i < 200; i++) {
 
 		dtauv = pht1->propagate_one_step (dt);
 		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() <<"\t" << pht1->r() << "\t" <<  pht1->theta() << "\t" <<  pht1->phi() <<"\t" <<dtauv << endl;
@@ -69,6 +69,12 @@ int main () {
 
 	        assert (abs(1 - (pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0))) < 1e-6 );
        		assert (abs(1 - (pow(pht1->k_r(), 2.0) + pow(pht1->k_theta(), 2.0) + pow(pht1->k_phi(), 2.0))) < 1e-6 );
+
+		assert (abs(pht1->get_mu()) <= 1.0);
+
+		//cout << "mu = " << pht1->get_mu() << "\t "<< (pht1->kx()*mg.Bx(pht1->r(), pht1->theta(), pht1->phi()) + pht1->ky()*mg.By(pht1->r(), pht1->theta(), pht1->phi()) + pht1->kz()*mg.Bz(pht1->r(), pht1->theta(), pht1->phi())) / mg.B(pht1->r(), pht1->theta())   << endl;
+
+		assert (abs(pht1->get_mu() - (pht1->kx()*mg.Bx(pht1->r(), pht1->theta(), pht1->phi()) + pht1->ky()*mg.By(pht1->r(), pht1->theta(), pht1->phi()) + pht1->kz()*mg.Bz(pht1->r(), pht1->theta(), pht1->phi()) ) / mg.B(pht1->r(), pht1->theta())  ) < 1e-6 );
 
 	}
 
