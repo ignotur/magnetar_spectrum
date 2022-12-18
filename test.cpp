@@ -31,7 +31,7 @@ int main () {
 	Bz = mg.Bz (3e6, 1.52, 0.0);
 
 	cout << "* Test of magnetic field transformation from spherical coordinate system to the Carthesian coordinate system" << endl;
-	//cout << "B = " << B <<" other B = "<< sqrt(Bx*Bx + By*By + Bz*Bz) << " diff: " << abs(B - sqrt(Bx*Bx + By*By + Bz*Bz)) <<endl;
+	cout << "B = " << B <<" other B = "<< sqrt(Bx*Bx + By*By + Bz*Bz) << " diff: " << abs(B - sqrt(Bx*Bx + By*By + Bz*Bz)) <<endl;
 
 	assert (abs(B - sqrt(Bx*Bx + By*By + Bz*Bz)) < 1e-6);
 	cout << "* Succes" << endl;

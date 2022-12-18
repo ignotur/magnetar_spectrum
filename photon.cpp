@@ -11,7 +11,7 @@ using namespace std;
 
 // Code to model spectra of the radiation emitted by a hot NS and scattered in the twisted magnetosphere
 // The main scattering mechanism is the resonant cyclotron scattering
-// The code is based on article by Nobili, Turolla & Zane (2008)
+// The code is based on articles by Nobili, Turolla & Zane (2008) and Fernandez & Thompson (2007)
 // Written by Dr. Andrei P. Igoshev ignotur@gmail.com
 
 
@@ -73,6 +73,10 @@ photon::photon (double theta, double phi, double T, double beaming, magnetospher
 	k[0] = sin(phi)*sin(phi0)*sin(theta0)*cos(theta) + sin(theta) *cos(theta0) + sin(theta0) *cos(phi) * cos(phi0) *cos(theta);
 	k[1] = -sin(phi) *sin(theta0) *cos(phi0) + sin(phi0) *sin(theta0) * cos(phi);
 	k[2] = -sin(phi) *sin(phi0) *sin(theta) * sin(theta0) - sin(theta) *sin(theta0)*cos(phi)*cos(phi0) +cos(theta) *cos(theta0);
+
+	kr [0] =  sin (theta) * cos (phi) * k[0] + sin(theta) * sin(phi) * k[1] + cos(theta) * k[2];
+	kr [1] =  cos (theta) * cos (phi) * k[0] + cos(theta) * sin(phi) * k[1] - sin(theta) * k[2];
+	kr [2] = -sin (phi) * k[0] + cos(phi) * k[1];
 
 	//cout << "Be careful, position and k vector might not be right at the moment" << endl;
 	//
@@ -325,26 +329,25 @@ double photon::propagate_one_step (double delta_t) {
 
 	cout << "New r: "<< r_new  <<endl;
 
-	k_r_new[0] = (pos_new[0] * k[0] + pos_new[1] * k[1] + pos_new[2] * k[2]) / r_new;
-	k_r_new[1] = (k_r_new[0] * cos(theta_new) - k[2]) / (r_new * sin(theta_new));
-	if ( abs(phi_new) > 0.1) 
-		k_r_new[2] = (k_r_new[0] * sin(theta_new) * cos(phi_new) + r_new * cos(theta_new) * k_r_new[1] * cos(phi_new) - k[0]) / (r_new * sin(theta_new) * sin(phi_new));
-	else
-		k_r_new[2] = (k[1] - k_r_new[0] * sin(theta_new) * sin(phi_new) + r_new * cos(theta_new) * k_r_new[1] * sin(phi_new)) / (r_new * sin(theta_new) * cos(phi_new));
-
-
+        //k_r_new[0] = (pos_new[0] * k[0] + pos_new[1] * k[1] + pos_new[2] * k[2]) / r_new;
+	//k_r_new[1] = (k_r_new[0] * cos(theta_new) - k[2]) / (r_new * sin(theta_new));
+	//if ( abs(phi_new) > 0.1) 
+	//	k_r_new[2] = (k_r_new[0] * sin(theta_new) * cos(phi_new) + r_new * cos(theta_new) * k_r_new[1] * cos(phi_new) - k[0]) / (r_new * sin(theta_new) * sin(phi_new));
+	//else
+	//	k_r_new[2] = (k[1] - k_r_new[0] * sin(theta_new) * sin(phi_new) + r_new * cos(theta_new) * k_r_new[1] * sin(phi_new)) / (r_new * sin(theta_new) * cos(phi_new));
+	//
 
 	pos[0] = pos_new[0];
 	pos[1] = pos_new[1];
 	pos[2] = pos_new[2];
 
 	pos_r[0] = r_new;
-	pos_r[1] =theta_new;
+	pos_r[1] = theta_new;
 	pos_r[2] = phi_new;
 
-	kr[0] = k_r_new[0];
-	kr[1] = k_r_new[1];
-	kr[2] = k_r_new[2];
+	kr[0] = sin(theta_new) * cos(phi_new) * k[0] + sin(theta_new) * sin(phi_new) * k[1] + cos(theta_new) * k[2];
+	kr[1] = cos(theta_new) * cos(phi_new) * k[0] + cos(theta_new) * sin(phi_new) * k[1] - sin(theta_new) * k[1];
+	kr[2] = - sin(phi_new) * k[0] + cos(phi_new) * k[1];
 
 	beta_plus_v  = beta_plus();
 	beta_minus_v = beta_minus();

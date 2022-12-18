@@ -28,13 +28,15 @@ class magnetosphere {
                 double Btheta  (double r, double theta) {return  0.5*Bpole * pow( Rns/r , 2.0+p1) * p1 * Ffun (theta) / sin(theta);};
                 double Bphi    (double r, double theta) {return Btheta (r, theta) * sqrt(C / (p1*(p1+1))) * pow(Ffun(theta), 1.0/p1);};
                 double B       (double r, double theta) {return sqrt(pow(Br(r, theta), 2.0) + pow(Btheta (r,theta), 2.0) + pow(Bphi(r,theta), 2.0));};
-//                double Bx      (double r, double theta, double phi) {return Br (r, theta) * sin(theta) * cos(phi) + Btheta (r,theta) * cos(theta)*cos(phi) - Bphi (r,theta) * sin(phi); };
-//                double By      (double r, double theta, double phi) {return Br (r, theta) * sin(theta) * sin(phi) + Btheta (r,theta) * cos(theta)*sin(phi) + Bphi (r,theta) * cos(phi); };
-//                double Bz      (double r, double theta, double phi) {return Br (r, theta) * cos(theta)  - Btheta (r,theta) * sin(theta); };
+		// Coordinate transformation for normalised spherical coordinates
+                double Bx      (double r, double theta, double phi) {return Br (r, theta) * sin(theta) * cos(phi) + Btheta (r,theta) * cos(theta)*cos(phi) - Bphi (r,theta) * sin(phi); };
+                double By      (double r, double theta, double phi) {return Br (r, theta) * sin(theta) * sin(phi) + Btheta (r,theta) * cos(theta)*sin(phi) + Bphi (r,theta) * cos(phi); };
+                double Bz      (double r, double theta, double phi) {return Br (r, theta) * cos(theta)  - Btheta (r,theta) * sin(theta); };
 
-                double Bx      (double r, double theta, double phi) {return Br (r, theta) * sin(theta) * cos(phi) + Btheta (r,theta) * r *cos(theta)*cos(phi) - Bphi (r,theta) * r * sin(theta) * sin(phi); };
-                double By      (double r, double theta, double phi) {return Br (r, theta) * sin(theta) * sin(phi) + Btheta (r,theta) * r *cos(theta)*sin(phi) + Bphi (r,theta) * r * sin(theta) * cos(phi); };
-                double Bz      (double r, double theta, double phi) {return Br (r, theta) * cos(theta)  - Btheta (r,theta) * r * sin(theta); };
+		// This is an incorrect version for the non-normalised spherical coordinates
+//                double Bx      (double r, double theta, double phi) {return Br (r, theta) * sin(theta) * cos(phi) + Btheta (r,theta) * r *cos(theta)*cos(phi) - Bphi (r,theta) * r * sin(theta) * sin(phi); };
+//                double By      (double r, double theta, double phi) {return Br (r, theta) * sin(theta) * sin(phi) + Btheta (r,theta) * r *cos(theta)*sin(phi) + Bphi (r,theta) * r * sin(theta) * cos(phi); };
+//                double Bz      (double r, double theta, double phi) {return Br (r, theta) * cos(theta)  - Btheta (r,theta) * r * sin(theta); };
 
 
 		double ne      (double r, double theta) {return (p1+1) / (4.0 * M_PI * echarge) * (Bphi(r,theta) / Btheta (r,theta)) * B (r, theta) / r / beta_bulk;};
