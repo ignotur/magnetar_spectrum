@@ -80,7 +80,7 @@ int main () {
 	for (int i=0; i < 200; i++) {
 
 		dtauv = pht1->propagate_one_step (dt);
-		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() <<"\t" << pht1->r() << "\t" <<  pht1->theta() << "\t" <<  pht1->phi() <<"\t" <<dtauv << endl;
+		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() <<"\t" << pht1->r() << "\t" <<  pht1->theta() << "\t" <<  pht1->phi() <<"\t" <<dtauv <<"\t" << pht1->get_mu() <<"\t"<< mg.omega_B (pht1->r(), pht1->theta()) / pht1->get_omega() << endl;
 
 		//cout << "Step: "<<i << endl;
 
