@@ -16,6 +16,7 @@ int main () {
         double T_surf;
         int N_phot;
         double E_init;
+	double sum_fbeta;
 	double B, Bx, By, Bz;
 	double dt;
 	double dtauv;
@@ -52,6 +53,25 @@ int main () {
 
 	cout << "mu is: " << pht1->get_mu() << endl;
 
+	// Let us test the normalisation of f_beta distribution here
+	//
+	//
+	cout << "* Test of f_beta numerical normalisation" << endl;
+
+	sum_fbeta =  mg.f_beta(-1.0) + mg.f_beta(-0.9) + mg.f_beta(-0.8) + mg.f_beta(-0.7) + mg.f_beta(-0.6);
+	sum_fbeta += mg.f_beta(-0.5) + mg.f_beta(-0.4) + mg.f_beta(-0.3) + mg.f_beta(-0.2) + mg.f_beta(-0.1);
+	sum_fbeta += mg.f_beta(0.0)  + mg.f_beta(0.1)  + mg.f_beta(0.2) + mg.f_beta(0.3) + mg.f_beta(0.4);
+	sum_fbeta += mg.f_beta(0.5)  + mg.f_beta(0.6)  + mg.f_beta(0.7) + mg.f_beta(0.8) + mg.f_beta(0.9);
+	sum_fbeta += mg.f_beta(1.0);
+
+	sum_fbeta = sum_fbeta * 0.1;
+	//cout << " sum_fbeta = " << sum_fbeta << endl;
+	
+	assert (abs(sum_fbeta - 1) < 0.1);
+
+	cout << "* Succes" << endl;
+	
+
 
         ofstream ofile ("propagation_test.txt");
 
@@ -62,10 +82,10 @@ int main () {
 		dtauv = pht1->propagate_one_step (dt);
 		ofile << pht1->x() << "\t" << pht1->y() << "\t" << pht1->z() <<"\t" << pht1->r() << "\t" <<  pht1->theta() << "\t" <<  pht1->phi() <<"\t" <<dtauv << endl;
 
-		cout << "Step: "<<i << endl;
+		//cout << "Step: "<<i << endl;
 
-		cout << (pow(pht1->k_r(), 2.0) + pow(pht1->k_theta(), 2.0) + pow(pht1->k_phi(), 2.0)) << endl;
-		cout << pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0) << endl;
+		//cout << (pow(pht1->k_r(), 2.0) + pow(pht1->k_theta(), 2.0) + pow(pht1->k_phi(), 2.0)) << endl;
+		//cout << pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0) << endl;
 
 	        assert (abs(1 - (pow(pht1->kx(), 2.0) + pow(pht1->ky(), 2.0) + pow(pht1->kz(), 2.0))) < 1e-6 );
        		assert (abs(1 - (pow(pht1->k_r(), 2.0) + pow(pht1->k_theta(), 2.0) + pow(pht1->k_phi(), 2.0))) < 1e-6 );
@@ -75,6 +95,9 @@ int main () {
 		//cout << "mu = " << pht1->get_mu() << "\t "<< (pht1->kx()*mg.Bx(pht1->r(), pht1->theta(), pht1->phi()) + pht1->ky()*mg.By(pht1->r(), pht1->theta(), pht1->phi()) + pht1->kz()*mg.Bz(pht1->r(), pht1->theta(), pht1->phi())) / mg.B(pht1->r(), pht1->theta())   << endl;
 
 		assert (abs(pht1->get_mu() - (pht1->kx()*mg.Bx(pht1->r(), pht1->theta(), pht1->phi()) + pht1->ky()*mg.By(pht1->r(), pht1->theta(), pht1->phi()) + pht1->kz()*mg.Bz(pht1->r(), pht1->theta(), pht1->phi()) ) / mg.B(pht1->r(), pht1->theta())  ) < 1e-6 );
+
+
+
 
 	}
 

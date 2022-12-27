@@ -161,6 +161,20 @@ double magnetosphere::f_beta  (double beta_v) {
 
 }
 
+// f_beta distribution used by Fernandez & Thompson (2007), their eq. (19)
+
+//double magnetosphere::f_beta_ft (double beta_v) { 
+
+//	double gamma_v, gamma_bulk, Theta_e, gamma_ap;
+//	double res;
+//	gamma_v    = 1.0 / (1.0 - beta_v*beta_v);
+//	gamma_bulk = 1.0 / (1.0 - beta_bulk*beta_bulk);
+	
+//	res = norm_f * exp(-sqrt(1.0 + beta_v * beta_v * gamma_v*gamma_v) / (gamma_bulk - 1.0)  );
+//	return res;
+//}
+
+
 void   magnetosphere::normalise_f_beta () {
 
 	double k1, k2, k3, k4, res, dbeta;
@@ -323,13 +337,13 @@ double photon::propagate_one_step (double delta_t) {
 	pos_new[1] = pos[1] + k[1] * delta_t * c;
 	pos_new[2] = pos[2] + k[2] * delta_t * c;
 
-	cout << "New pos: "<< pos_new[0] / 1e6 <<"\t" << pos_new[1] / 1e6 << "\t" << pos_new[2] / 1e6 << endl;  
+	//cout << "New pos: "<< pos_new[0] / 1e6 <<"\t" << pos_new[1] / 1e6 << "\t" << pos_new[2] / 1e6 << endl;  
 
 	r_new     = sqrt(pos_new[0]* pos_new[0] + pos_new[1]*pos_new[1] + pos_new[2]*pos_new[2]);
 	theta_new = atan2 (sqrt(pos_new[0]*pos_new[0] + pos_new[1]*pos_new[1]), pos_new[2] );
 	phi_new   = atan2 (pos_new[1], pos_new[0]);
 
-	cout << "New r: "<< r_new  <<endl;
+	//cout << "New r: "<< r_new  <<endl;
 
         //k_r_new[0] = (pos_new[0] * k[0] + pos_new[1] * k[1] + pos_new[2] * k[2]) / r_new;
 	//k_r_new[1] = (k_r_new[0] * cos(theta_new) - k[2]) / (r_new * sin(theta_new));
